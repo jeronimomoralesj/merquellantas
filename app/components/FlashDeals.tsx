@@ -1,39 +1,24 @@
 "use client";
 
 import { useState, useRef } from "react";
-import {
-  ShoppingCart,
-  Star,
-  ChevronLeft,
-  ChevronRight,
-  Zap,
-  Clock,
-  Check,
-} from "lucide-react";
-import { PRODUCTS, type Product } from "../lib/mockData";
+import { ShoppingCart, Star, ChevronLeft, ChevronRight, Check, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { ALL_PRODUCTS, type Product } from "../lib/products";
+import { useCart } from "../context/CartContext";
 
-const BADGE_STYLES: Record<string, string> = {
-  "best-seller": "bg-[#ff9900] text-black",
-  "flash-deal": "bg-red-500 text-white",
-  new: "bg-emerald-500 text-white",
-  hot: "bg-purple-500 text-white",
+const BADGE_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+  "best-seller": { bg: "bg-[#ff9900]",   text: "text-black",  label: "Mas vendido" },
+  "flash-deal":  { bg: "bg-rose-500",    text: "text-white",  label: "Oferta limitada" },
+  "new":         { bg: "bg-emerald-500", text: "text-white",  label: "Nuevo" },
+  "hot":         { bg: "bg-violet-500",  text: "text-white",  label: "Popular" },
 };
 
-const CATEGORY_ICONS: Record<string, string> = {
-  llantas: "○",
-  lubricantes: "◈",
-  baterias: "◰",
-  rines: "◎",
-};
-
-function StarRating({ rating }: { rating: number }) {
+function Stars({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((i) => (
-        <Star
-          key={i}
-          size={11}
-          className={i <= Math.round(rating) ? "text-[#ff9900]" : "text-zinc-700"}
+        <Star key={i} size={11}
+          className={i <= Math.round(rating) ? "text-[#ff9900]" : "text-gray-200"}
           fill={i <= Math.round(rating) ? "#ff9900" : "transparent"}
         />
       ))}
@@ -43,120 +28,89 @@ function StarRating({ rating }: { rating: number }) {
 
 function ProductCard({ product }: { product: Product }) {
   const [added, setAdded] = useState(false);
+  const { addToCart } = useCart();
+  const badge = product.badge ? BADGE_STYLES[product.badge] : null;
 
-  const handleAdd = () => {
+  function handleAdd() {
+    addToCart(product);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
-  };
+  }
 
   return (
-    <div className="flex-none w-72 sm:w-80 bg-[#111113] border border-white/8 rounded-2xl overflow-hidden group hover:border-[#ff9900]/30 transition-all duration-300 hover:scale-[1.02]">
-      {/* Image container */}
-      <div
-        className="relative h-48 flex items-center justify-center overflow-hidden"
-        style={{ background: `linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%)` }}
-      >
-        {/* Simulated product visual */}
-        <div className="relative w-36 h-36 flex items-center justify-center">
-          <div
-            className="absolute inset-0 rounded-full border-8 border-zinc-700 opacity-60"
-            style={{ borderColor: product.imageColor }}
-          />
-          <div className="absolute inset-4 rounded-full border-4 border-zinc-600 opacity-40" />
-          <div className="absolute inset-8 rounded-full bg-zinc-800 flex items-center justify-center">
-            <span className="text-3xl opacity-60">{CATEGORY_ICONS[product.category]}</span>
-          </div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-zinc-600" />
+    <div className="flex-none w-[272px] sm:w-72 bg-white border border-gray-100 rounded-2xl overflow-hidden group hover:border-[#ff9900]/30 hover:shadow-[0_4px_24px_rgba(255,153,0,0.10)] transition-all duration-300">
+
+      {/* Image area */}
+      <Link href={`/products/${product.id}`}>
+        <div className="relative h-44 overflow-hidden cursor-pointer"
+          style={!product.images?.[0] ? { background: `linear-gradient(135deg, ${product.bgFrom}, ${product.bgTo})` } : {}}>
+          {product.images?.[0] ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={product.images[0]} alt={product.name} className="w-full h-full object-contain bg-gray-50 p-3" />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full gap-1.5">
+              <span className="text-3xl font-black text-white/20 tracking-tight select-none leading-none">{product.brand}</span>
+              <span className="text-xs text-white/30 font-semibold">{product.specs[0]}</span>
+            </div>
+          )}
+          {badge && (
+            <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wide ${badge.bg} ${badge.text}`}>
+              {badge.label}
+            </div>
+          )}
+          {product.discountPct && (
+            <div className="absolute top-3 right-3 px-2 py-0.5 rounded-md bg-white text-rose-500 text-xs font-black border border-rose-100">
+              -{product.discountPct}%
+            </div>
+          )}
+          <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#ff9900] scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
         </div>
+      </Link>
 
-        {/* Badge */}
-        {product.badge && (
-          <div
-            className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wide ${
-              BADGE_STYLES[product.badge]
-            }`}
-          >
-            {product.badge === "flash-deal" && <Zap size={10} className="inline mr-1" />}
-            {product.badgeLabel}
-          </div>
-        )}
-
-        {/* Discount */}
-        {product.discountPct && (
-          <div className="absolute top-3 right-3 px-2 py-1 rounded-lg bg-black/80 text-[#ff9900] text-xs font-black border border-[#ff9900]/30">
-            -{product.discountPct}%
-          </div>
-        )}
-
-        {/* Hover overlay */}
-        <div className="absolute inset-0 bg-[#ff9900]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      </div>
-
-      {/* Content */}
       <div className="p-5">
-        {/* Brand + category */}
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[#ff9900] text-xs font-bold uppercase tracking-wider">
-            {product.brand}
-          </span>
-          <span className="text-zinc-600 text-xs capitalize">{product.category}</span>
-        </div>
+        <p className="text-[10px] font-black uppercase tracking-widest text-[#ff9900] mb-1">
+          {product.brand}
+        </p>
+        <Link href={`/products/${product.id}`}>
+          <h3 className="text-gray-900 font-bold text-sm leading-snug mb-2 group-hover:text-[#ff9900] transition-colors cursor-pointer">
+            {product.name}
+          </h3>
+        </Link>
 
-        {/* Name */}
-        <h3 className="text-white font-bold text-sm mb-2 leading-tight group-hover:text-[#ff9900] transition-colors">
-          {product.name}
-        </h3>
-
-        {/* Specs */}
         <div className="flex flex-wrap gap-1 mb-3">
-          {product.specs.map((spec) => (
-            <span
-              key={spec}
-              className="text-xs text-zinc-500 bg-zinc-800/80 px-2 py-0.5 rounded-md"
-            >
-              {spec}
+          {product.specs.slice(0, 3).map((s) => (
+            <span key={s} className="text-[11px] text-gray-400 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+              {s}
             </span>
           ))}
         </div>
 
-        {/* Rating */}
         <div className="flex items-center gap-2 mb-4">
-          <StarRating rating={product.rating} />
-          <span className="text-zinc-400 text-xs font-medium">{product.rating}</span>
-          <span className="text-zinc-600 text-xs">
-            ({product.reviewCount.toLocaleString()})
-          </span>
+          <Stars rating={product.rating} />
+          <span className="text-gray-500 text-xs">{product.rating}</span>
+          <span className="text-gray-300 text-xs">({product.reviewCount.toLocaleString()})</span>
         </div>
 
-        {/* Price + CTA */}
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-end justify-between gap-2">
           <div>
-            <div className="text-white font-black text-lg">
+            <div className="text-gray-900 font-black text-lg leading-none">
               ${product.price.toLocaleString("es-CO")}
             </div>
             {product.originalPrice && (
-              <div className="text-zinc-600 text-xs line-through">
+              <div className="text-gray-300 text-xs line-through mt-0.5">
                 ${product.originalPrice.toLocaleString("es-CO")}
               </div>
             )}
           </div>
           <button
             onClick={handleAdd}
-            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 flex-shrink-0 ${
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex-shrink-0 ${
               added
-                ? "bg-emerald-500 text-white"
-                : "bg-[#ff9900] text-black hover:bg-[#e68a00] hover:scale-[1.03] active:scale-[0.97]"
+                ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
+                : "bg-[#ff9900] text-black hover:bg-[#e68a00] active:scale-[0.97] shadow-[0_2px_8px_rgba(255,153,0,0.3)]"
             }`}
           >
-            {added ? (
-              <>
-                <Check size={15} /> Agregado
-              </>
-            ) : (
-              <>
-                <ShoppingCart size={15} /> Agregar
-              </>
-            )}
+            {added ? <><Check size={13} /> Agregado</> : <><ShoppingCart size={13} /> Agregar</>}
           </button>
         </div>
       </div>
@@ -164,111 +118,80 @@ function ProductCard({ product }: { product: Product }) {
   );
 }
 
-const FILTER_TABS = [
-  { id: "all", label: "Todo" },
-  { id: "llantas", label: "Llantas" },
+const FILTERS = [
+  { id: "all",         label: "Todo" },
+  { id: "llantas",     label: "Llantas" },
   { id: "lubricantes", label: "Lubricantes" },
-  { id: "baterias", label: "Baterías" },
-  { id: "rines", label: "Rines" },
+  { id: "baterias",    label: "Baterias" },
+  { id: "rines",       label: "Rines" },
+  { id: "accesorios",  label: "Accesorios" },
 ];
 
 export default function FlashDeals() {
-  const [activeFilter, setActiveFilter] = useState("all");
+  const [filter, setFilter] = useState("all");
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const filtered =
-    activeFilter === "all"
-      ? PRODUCTS
-      : PRODUCTS.filter((p) => p.category === activeFilter);
-
-  const scroll = (dir: "left" | "right") => {
-    if (!scrollRef.current) return;
-    const amount = 320;
-    scrollRef.current.scrollBy({ left: dir === "right" ? amount : -amount, behavior: "smooth" });
-  };
-
-  // Countdown mock
-  const countdown = "02:47:13";
+  const products = filter === "all" ? ALL_PRODUCTS : ALL_PRODUCTS.filter((p) => p.category === filter);
+  const scroll = (dir: "left" | "right") =>
+    scrollRef.current?.scrollBy({ left: dir === "right" ? 300 : -300, behavior: "smooth" });
 
   return (
-    <section id="offers" className="py-24 bg-[#0a0a0b]">
+    <section id="offers" className="bg-white pt-12 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-5">
           <div>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/15 border border-red-500/30">
-                <Zap size={14} className="text-red-400" />
-                <span className="text-red-400 text-xs font-bold uppercase tracking-wider">
-                  Flash Deals
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 text-zinc-400 text-sm">
-                <Clock size={14} className="text-[#ff9900]" />
-                <span className="font-mono text-[#ff9900] font-bold">{countdown}</span>
-                <span className="text-zinc-600 text-xs">restante</span>
-              </div>
-            </div>
-            <h2 className="text-4xl sm:text-5xl font-black text-white tracking-tight">
-              Mejores ventas
+            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
+              Productos destacados
               <br />
-              <span className="text-gradient-brand">y ofertas hoy.</span>
+              y ofertas activas.
             </h2>
           </div>
-
-          {/* Scroll controls */}
           <div className="flex items-center gap-2 self-end sm:self-auto">
-            <button
-              onClick={() => scroll("left")}
-              className="w-10 h-10 rounded-full border border-zinc-700 flex items-center justify-center text-zinc-400 hover:border-[#ff9900] hover:text-[#ff9900] transition-all"
-            >
-              <ChevronLeft size={18} />
+            <button onClick={() => scroll("left")}
+              className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:border-[#ff9900] hover:text-[#ff9900] transition-all">
+              <ChevronLeft size={17} />
             </button>
-            <button
-              onClick={() => scroll("right")}
-              className="w-10 h-10 rounded-full border border-zinc-700 flex items-center justify-center text-zinc-400 hover:border-[#ff9900] hover:text-[#ff9900] transition-all"
-            >
-              <ChevronRight size={18} />
+            <button onClick={() => scroll("right")}
+              className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:border-[#ff9900] hover:text-[#ff9900] transition-all">
+              <ChevronRight size={17} />
             </button>
           </div>
         </div>
 
-        {/* Filter tabs */}
-        <div className="flex items-center gap-2 mb-8 overflow-x-auto no-scrollbar pb-1">
-          {FILTER_TABS.map((tab) => (
+        {/* Filters */}
+        <div className="flex items-center gap-2 mb-7 overflow-x-auto no-scrollbar pb-1">
+          {FILTERS.map((f) => (
             <button
-              key={tab.id}
-              onClick={() => setActiveFilter(tab.id)}
-              className={`flex-none px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
-                activeFilter === tab.id
-                  ? "bg-[#ff9900] text-black"
-                  : "bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800 border border-zinc-800"
+              key={f.id}
+              onClick={() => setFilter(f.id)}
+              className={`flex-none px-4 py-2 rounded-lg text-sm font-semibold transition-all border ${
+                filter === f.id
+                  ? "bg-[#ff9900] text-black border-[#ff9900]"
+                  : "bg-white text-gray-500 border-gray-200 hover:border-[#ff9900]/40 hover:text-gray-700"
               }`}
             >
-              {tab.label}
+              {f.label}
             </button>
           ))}
         </div>
 
-        {/* Products carousel */}
-        <div
-          ref={scrollRef}
-          className="flex gap-4 overflow-x-auto no-scrollbar pb-4"
-        >
-          {filtered.map((product) => (
-            <ProductCard key={product.id} product={product} />
+        {/* Carousel */}
+        <div ref={scrollRef} className="flex gap-4 overflow-x-auto no-scrollbar pb-4">
+          {products.map((p) => (
+            <ProductCard key={p.id} product={p} />
           ))}
-
-          {/* See all card */}
-          <div className="flex-none w-64 bg-zinc-900/50 border border-dashed border-zinc-800 rounded-2xl flex flex-col items-center justify-center gap-3 hover:border-[#ff9900]/30 transition-colors cursor-pointer group min-h-[360px]">
-            <div className="w-12 h-12 rounded-full bg-[#ff9900]/10 border border-[#ff9900]/30 flex items-center justify-center group-hover:bg-[#ff9900]/20 transition-colors">
-              <ChevronRight size={20} className="text-[#ff9900]" />
+          <Link
+            href="/products"
+            className="flex-none w-52 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-3 hover:border-[#ff9900]/40 transition-colors cursor-pointer group min-h-[380px]"
+          >
+            <div className="w-10 h-10 rounded-full bg-[#ff9900]/10 flex items-center justify-center group-hover:bg-[#ff9900]/20 transition-colors">
+              <ArrowRight size={18} className="text-[#ff9900]" />
             </div>
-            <div className="text-center">
-              <p className="text-white font-bold text-sm">Ver todo el catálogo</p>
-              <p className="text-zinc-500 text-xs mt-1">+1.600 productos</p>
+            <div className="text-center px-4">
+              <p className="text-gray-700 font-bold text-sm">Ver catalogo</p>
+              <p className="text-gray-400 text-xs mt-0.5">+1.600 productos</p>
             </div>
-          </div>
+          </Link>
         </div>
       </div>
     </section>

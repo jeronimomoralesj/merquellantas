@@ -53,7 +53,7 @@ export const CATEGORIES: Category[] = [
     itemCount: 840,
     gradient: "from-zinc-900 to-zinc-800",
     accentColor: "#ff9900",
-    icon: "🔵",
+    icon: "tires",
   },
   {
     id: "lubricantes",
@@ -64,7 +64,7 @@ export const CATEGORIES: Category[] = [
     itemCount: 320,
     gradient: "from-zinc-900 to-zinc-800",
     accentColor: "#ff9900",
-    icon: "🟡",
+    icon: "lubricants",
   },
   {
     id: "baterias",
@@ -75,7 +75,7 @@ export const CATEGORIES: Category[] = [
     itemCount: 180,
     gradient: "from-zinc-900 to-zinc-800",
     accentColor: "#ff9900",
-    icon: "🟢",
+    icon: "batteries",
   },
   {
     id: "rines",
@@ -86,7 +86,7 @@ export const CATEGORIES: Category[] = [
     itemCount: 260,
     gradient: "from-zinc-900 to-zinc-800",
     accentColor: "#ff9900",
-    icon: "⚪",
+    icon: "rims",
   },
 ];
 
@@ -292,9 +292,9 @@ export const TRUST_BADGES = [
 // ─── Announcement ticker ─────────────────────────────────────────────────────
 
 export const ANNOUNCEMENTS = [
-  "🔥 Flash Deal: 15% OFF en Michelin Primacy 4 — Solo hoy",
-  "🚚 Envío GRATIS en compras superiores a $400.000",
-  "⚡ Instalación Express disponible en Bogotá, Medellín y Cali",
-  "✅ +15.000 clientes satisfechos · Garantía certificada en todos los productos",
-  "🏆 Distribuidores oficiales Michelin, Continental, Bridgestone y Pirelli en Colombia",
+  "Flash Deal: 15% OFF en Michelin Primacy 4 — Solo hoy",
+  "Envio GRATIS en compras superiores a $400.000",
+  "Instalacion Express disponible en Bogota, Medellin y Cali",
+  "+15.000 clientes satisfechos · Garantia certificada en todos los productos",
+  "Distribuidores oficiales Michelin, Continental, Bridgestone y Pirelli en Colombia",
 ];

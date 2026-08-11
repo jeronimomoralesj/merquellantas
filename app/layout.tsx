@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
+import { CartProvider } from "./context/CartContext";
+import CartDrawer from "./components/CartDrawer";
 
 const geist = Geist({
   variable: "--font-geist",
@@ -22,7 +24,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${geist.variable} h-full`}>
-      <body className="min-h-full flex flex-col bg-[#0f0f10] antialiased">{children}</body>
+      <body className="min-h-full flex flex-col bg-white antialiased">
+        <CartProvider>
+          {children}
+          <CartDrawer />
+        </CartProvider>
+      </body>
     </html>
   );
 }

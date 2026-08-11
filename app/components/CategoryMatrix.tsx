@@ -1,181 +1,322 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowRight, Layers } from "lucide-react";
-import { CATEGORIES } from "../lib/mockData";
+import Link from "next/link";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
-const CATEGORY_BG_COLORS = [
-  { bg: "from-zinc-900 via-zinc-800 to-zinc-900", accent: "border-[#ff9900]" },
-  { bg: "from-zinc-900 via-zinc-800 to-zinc-900", accent: "border-blue-500/40" },
-  { bg: "from-zinc-900 via-zinc-800 to-zinc-900", accent: "border-emerald-500/40" },
-  { bg: "from-zinc-900 via-zinc-800 to-zinc-900", accent: "border-purple-500/40" },
+const CATEGORIES = [
+  {
+    id: "lubricantes",
+    name: "Lubricantes",
+    description: "Aceites sinteticos, semi-sinteticos y convencionales",
+    count: "320+",
+    tags: ["Sintetico", "Diesel", "Transmision", "Aditivos"],
+  },
+  {
+    id: "llantas",
+    name: "Llantas",
+    description: "Touring, alto rendimiento, todo terreno y SUV",
+    count: "840+",
+    tags: ["Touring", "A/T", "Performance", "SUV"],
+  },
+  {
+    id: "baterias",
+    name: "Baterias",
+    description: "AGM, libre mantenimiento y alta potencia",
+    count: "180+",
+    tags: ["AGM", "Auto", "Moto", "Alta potencia"],
+  },
+  {
+    id: "rines",
+    name: "Rines",
+    description: "Aluminio OEM, deportivos, acero y off-road",
+    count: "260+",
+    tags: ["Aluminio", "Off-Road", "Deportivos", "Cromo"],
+  },
+  {
+    id: "accesorios",
+    name: "Accesorios",
+    description: "Limpieza, proteccion, seguridad vial y mas",
+    count: "410+",
+    tags: ["Limpieza", "Proteccion", "Seguridad", "Kits"],
+  },
 ];
 
-const CATEGORY_ILLUSTRATIONS = [
-  // Llantas - tire tread pattern
-  <svg key="llantas" viewBox="0 0 120 120" className="w-full h-full opacity-20" fill="none">
-    <circle cx="60" cy="60" r="50" stroke="#ff9900" strokeWidth="8" />
-    <circle cx="60" cy="60" r="35" stroke="#ff9900" strokeWidth="4" strokeDasharray="6 4" />
-    <circle cx="60" cy="60" r="18" stroke="#ff9900" strokeWidth="6" />
-    <circle cx="60" cy="60" r="8" fill="#ff9900" />
-    {[0, 45, 90, 135, 180, 225, 270, 315].map((a, i) => (
-      <rect
-        key={i}
-        x="57"
-        y="14"
-        width="6"
-        height="14"
-        rx="3"
-        fill="#ff9900"
-        transform={`rotate(${a} 60 60)`}
+const ICONS: Record<string, React.ReactNode> = {
+  llantas: (
+    <svg viewBox="0 0 48 48" fill="none" className="w-full h-full">
+      <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="3" />
+      <circle cx="24" cy="24" r="10" stroke="currentColor" strokeWidth="2.5" />
+      <circle cx="24" cy="24" r="3.5" fill="currentColor" />
+      {[0, 60, 120, 180, 240, 300].map((a, i) => (
+        <line
+          key={i}
+          x1="24"
+          y1="24"
+          x2={24 + 16 * Math.cos((a * Math.PI) / 180)}
+          y2={24 + 16 * Math.sin((a * Math.PI) / 180)}
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      ))}
+    </svg>
+  ),
+  lubricantes: (
+    <svg viewBox="0 0 48 48" fill="none" className="w-full h-full">
+      <path
+        d="M24 4C24 4 12 20 12 30C12 37.2 17.4 44 24 44C30.6 44 36 37.2 36 30C36 20 24 4 24 4Z"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
       />
-    ))}
-  </svg>,
-  // Lubricantes - oil drop
-  <svg key="lubricantes" viewBox="0 0 120 120" className="w-full h-full opacity-20" fill="none">
-    <path d="M60 10 C60 10 30 50 30 72 C30 88 44 102 60 102 C76 102 90 88 90 72 C90 50 60 10 60 10Z" fill="#ff9900" />
-    <path d="M48 75 C48 68 52 63 60 60" stroke="white" strokeWidth="3" strokeLinecap="round" />
-    <circle cx="60" cy="90" r="6" fill="white" opacity="0.3" />
-  </svg>,
-  // Baterías - battery
-  <svg key="baterias" viewBox="0 0 120 120" className="w-full h-full opacity-20" fill="none">
-    <rect x="15" y="35" width="90" height="55" rx="8" stroke="#ff9900" strokeWidth="6" />
-    <rect x="45" y="25" width="12" height="12" rx="3" fill="#ff9900" />
-    <rect x="63" y="25" width="12" height="12" rx="3" fill="#ff9900" />
-    <path d="M35 62 L50 45 L50 60 L65 45 L65 60 L80 43" stroke="#ff9900" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>,
-  // Rines - wheel
-  <svg key="rines" viewBox="0 0 120 120" className="w-full h-full opacity-20" fill="none">
-    <circle cx="60" cy="60" r="48" stroke="#ff9900" strokeWidth="5" />
-    <circle cx="60" cy="60" r="20" stroke="#ff9900" strokeWidth="5" />
-    {[0, 72, 144, 216, 288].map((a, i) => (
-      <line
-        key={i}
-        x1="60"
-        y1="60"
-        x2={60 + 45 * Math.cos((a * Math.PI) / 180)}
-        y2={60 + 45 * Math.sin((a * Math.PI) / 180)}
-        stroke="#ff9900"
-        strokeWidth="5"
+      <path d="M18 32C18 28 21 25 24 23" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  ),
+  baterias: (
+    <svg viewBox="0 0 48 48" fill="none" className="w-full h-full">
+      <rect x="6" y="14" width="36" height="24" rx="3" stroke="currentColor" strokeWidth="2.5" />
+      <rect x="17" y="8" width="5" height="8" rx="1.5" stroke="currentColor" strokeWidth="2" />
+      <rect x="26" y="8" width="5" height="8" rx="1.5" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M14 26L20 18L20 26L26 18L26 26L32 18"
+        stroke="currentColor"
+        strokeWidth="2.5"
         strokeLinecap="round"
+        strokeLinejoin="round"
       />
-    ))}
-    <circle cx="60" cy="60" r="8" fill="#ff9900" />
-  </svg>,
-];
+    </svg>
+  ),
+  rines: (
+    <svg viewBox="0 0 48 48" fill="none" className="w-full h-full">
+      <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="2.5" />
+      <circle cx="24" cy="24" r="7" stroke="currentColor" strokeWidth="2.5" />
+      {[0, 72, 144, 216, 288].map((a, i) => (
+        <line
+          key={i}
+          x1={24 + 8 * Math.cos((a * Math.PI) / 180)}
+          y1={24 + 8 * Math.sin((a * Math.PI) / 180)}
+          x2={24 + 18 * Math.cos((a * Math.PI) / 180)}
+          y2={24 + 18 * Math.sin((a * Math.PI) / 180)}
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
+      ))}
+    </svg>
+  ),
+  accesorios: (
+    <svg viewBox="0 0 48 48" fill="none" className="w-full h-full">
+      <path
+        d="M24 6L28 18L42 18L31 27L35 40L24 32L13 40L17 27L6 18L20 18Z"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+};
+
+const TOTAL = CATEGORIES.length;
+
+// Shortest circular distance from centerIndex to index, in range [-2, 2] for 5 items
+function relativeDistance(index: number, centerIndex: number, total: number) {
+  const half = Math.floor(total / 2);
+  let diff = (index - centerIndex + half + total) % total;
+  return diff - half;
+}
 
 export default function CategoryMatrix() {
-  const [hovered, setHovered] = useState<string | null>(null);
+  // Start with "llantas" (index 1) centered -> lubricantes left, baterias right
+  const [centerIndex, setCenterIndex] = useState(1);
+  const [inView, setInView] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const node = sectionRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // Toggles both on the way down AND on the way back up,
+          // so the reveal replays like Apple's product pages.
+          setInView(entry.isIntersecting);
+        });
+      },
+      {
+        threshold: 0.25,
+        rootMargin: "-10% 0px -10% 0px",
+      }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  const goTo = useCallback((dir: 1 | -1) => {
+    setCenterIndex((prev) => (prev + dir + TOTAL) % TOTAL);
+  }, []);
 
   return (
-    <section id="categories" className="py-24 bg-[#0f0f10]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-4">
+    <section ref={sectionRef} id="categories" className="bg-gray-50 py-10 md:py-12 overflow-hidden bg-[url('https://www.eceiza.net/wp-content/uploads/2018/10/carreteras-clasificacion.jpg')] bg-no-repeat bg-center bg-cover">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 sm:mb-8 gap-4">
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Layers size={16} className="text-[#ff9900]" />
-              <span className="text-[#ff9900] text-sm font-semibold uppercase tracking-wider">
-                Categorías
-              </span>
-            </div>
-            <h2 className="text-4xl sm:text-5xl font-black text-white tracking-tight">
-              Todo lo que tu
-              <br />
-              <span className="text-gradient-brand">vehículo necesita.</span>
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#ff9900] mb-2">
+              Categorias
+            </p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
+              Explora nuestro catalogo.
             </h2>
           </div>
-          <p className="text-zinc-500 text-sm max-w-xs leading-relaxed">
-            Más de 1.600 productos de las marcas más reconocidas a nivel mundial,
-            con entrega y asesoría especializada.
-          </p>
+          <a
+            href="#"
+            className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-[#ff9900] transition-colors self-start sm:self-auto"
+          >
+            Ver todo <ArrowRight size={14} />
+          </a>
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {CATEGORIES.map((cat, idx) => {
-            const isHovered = hovered === cat.id;
-            const colors = CATEGORY_BG_COLORS[idx];
+        {/* 3D Carousel */}
+        <div className="relative">
+          {/* Prev arrow */}
+          <button
+            type="button"
+            onClick={() => goTo(-1)}
+            aria-label="Categoria anterior"
+            className="absolute left-0 sm:left-2 lg:left-4 top-1/2 -translate-y-1/2 z-40 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:text-[#ff9900] hover:border-[#ff9900] transition-colors"
+          >
+            <ChevronLeft size={20} />
+          </button>
 
-            return (
-              <div
-                key={cat.id}
-                id={cat.id}
-                onMouseEnter={() => setHovered(cat.id)}
-                onMouseLeave={() => setHovered(null)}
-                className={`relative overflow-hidden rounded-2xl border cursor-pointer transition-all duration-300 hover:scale-[1.02] group ${
-                  isHovered ? colors.accent : "border-white/8"
-                }`}
-                style={{ minHeight: "360px" }}
-              >
-                {/* Background gradient */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${colors.bg}`} />
+          {/* Next arrow */}
+          <button
+            type="button"
+            onClick={() => goTo(1)}
+            aria-label="Siguiente categoria"
+            className="absolute right-0 sm:right-2 lg:right-4 top-1/2 -translate-y-1/2 z-40 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white border border-gray-200 shadow-md flex items-center justify-center text-gray-500 hover:text-[#ff9900] hover:border-[#ff9900] transition-colors"
+          >
+            <ChevronRight size={20} />
+          </button>
 
-                {/* Illustration bg */}
-                <div className="absolute top-4 right-4 w-32 h-32 transition-all duration-500 group-hover:scale-110 group-hover:opacity-30">
-                  {CATEGORY_ILLUSTRATIONS[idx]}
-                </div>
+          <div
+            className="relative mx-auto w-full max-w-6xl h-[240px] sm:h-[260px] md:h-[280px] lg:h-[300px]"
+            style={{ perspective: "1600px" }}
+          >
+            {CATEGORIES.map((cat, index) => {
+              const rel = relativeDistance(index, centerIndex, TOTAL);
+              const visible = Math.abs(rel) <= 1;
 
-                {/* Orange glow on hover */}
+              // Target (settled) transform once scrolled into view
+              let translateX = "0%";
+              let translateZ = "0px";
+              let rotateY = "0deg";
+              let scale = 1;
+              let opacity = 1;
+              let zIndex = 30;
+              let pointerEvents: "auto" | "none" = "auto";
+
+              if (rel === 0) {
+                translateX = "0%";
+                rotateY = "0deg";
+                scale = 1;
+                zIndex = 30;
+              } else if (rel === -1) {
+                translateX = "-108%";
+                translateZ = "-70px";
+                rotateY = "20deg";
+                scale = 0.88;
+                zIndex = 20;
+              } else if (rel === 1) {
+                translateX = "108%";
+                translateZ = "-70px";
+                rotateY = "-20deg";
+                scale = 0.88;
+                zIndex = 20;
+              } else if (rel === -2) {
+                translateX = "-170%";
+                translateZ = "-220px";
+                rotateY = "24deg";
+                scale = 0.7;
+                opacity = 0;
+                zIndex = 10;
+                pointerEvents = "none";
+              } else {
+                translateX = "170%";
+                translateZ = "-220px";
+                rotateY = "-24deg";
+                scale = 0.7;
+                opacity = 0;
+                zIndex = 10;
+                pointerEvents = "none";
+              }
+
+              // Scroll-reveal: before/after being in view, collapse cards
+              // toward the center and fade them, like Apple's reveal.
+              const settledTransform = `translate(-50%, -50%) translateX(${translateX}) translateZ(${translateZ}) rotateY(${rotateY}) scale(${scale})`;
+              const collapsedTransform = `translate(-50%, -50%) translateX(${
+                rel === 0 ? "0%" : rel < 0 ? "-15%" : "15%"
+              }) translateZ(-200px) rotateY(0deg) scale(0.4)`;
+
+              const transform = inView ? settledTransform : collapsedTransform;
+              const finalOpacity = inView ? opacity : 0;
+
+              return (
                 <div
-                  className={`absolute inset-0 bg-[#ff9900]/5 transition-opacity duration-300 ${
-                    isHovered ? "opacity-100" : "opacity-0"
-                  }`}
-                />
+                  key={cat.id}
+                  className="absolute left-1/2 top-1/2 w-[200px] sm:w-[230px] md:w-[260px] lg:w-[290px] transition-[transform,opacity] duration-700 ease-out "
+                  style={{
+                    transform,
+                    opacity: finalOpacity,
+                    zIndex,
+                    pointerEvents: visible ? pointerEvents : "none",
+                    transformStyle: "preserve-3d",
+                  }}
+                  aria-hidden={rel !== 0}
+                >
+                  <Link
+                    href={`/products?category=${cat.id}`}
+                    onClick={(e) => {
+                      // Side cards act as navigation shortcuts to re-center
+                      if (rel !== 0) {
+                        e.preventDefault();
+                        setCenterIndex(index);
+                      }
+                    }}
+                    className="group/card relative block h-100 bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_40px_rgba(255,153,0,0.18)] transition-all duration-300 hover:scale-[1.06] hover:-translate-y-1"
+                  >
+                    {/* Corner accents (appear on hover) */}
+                    <span className="pointer-events-none absolute -top-[2px] -left-[2px] w-6 h-6 border-t-[3px] border-l-[3px] border-[#ff9900] rounded-tl-2xl opacity-0 scale-75 group-hover/card:opacity-100 group-hover/card:scale-100 transition-all duration-300" />
+                    <span className="pointer-events-none absolute -top-[2px] -right-[2px] w-6 h-6 border-t-[3px] border-r-[3px] border-[#ff9900] rounded-tr-2xl opacity-0 scale-75 group-hover/card:opacity-100 group-hover/card:scale-100 transition-all duration-300" />
+                    <span className="pointer-events-none absolute -bottom-[2px] -left-[2px] w-6 h-6 border-b-[3px] border-l-[3px] border-[#ff9900] rounded-bl-2xl opacity-0 scale-75 group-hover/card:opacity-100 group-hover/card:scale-100 transition-all duration-300" />
+                    <span className="pointer-events-none absolute -bottom-[2px] -right-[2px] w-6 h-6 border-b-[3px] border-r-[3px] border-[#ff9900] rounded-br-2xl opacity-0 scale-75 group-hover/card:opacity-100 group-hover/card:scale-100 transition-all duration-300" />
 
-                {/* Content */}
-                <div className="relative p-6 flex flex-col h-full" style={{ minHeight: "360px" }}>
-                  {/* Item count badge */}
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/8 text-zinc-400 text-xs font-medium w-fit mb-auto">
-                    <span>{cat.itemCount} productos</span>
-                  </div>
+                    {/* Orange top line on hover */}
+                    <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#ff9900] scale-x-0 group-hover/card:scale-x-100 transition-transform origin-left rounded-t-2xl" />
 
-                  <div className="mt-auto">
-                    {/* Category name */}
-                    <h3 className="text-3xl font-black text-white mb-1 group-hover:text-[#ff9900] transition-colors duration-200">
-                      {cat.nameEs}
-                    </h3>
-                    <p className="text-zinc-500 text-sm mb-5">{cat.description}</p>
-
-                    {/* Subcategories — reveal on hover */}
-                    <div
-                      className={`grid grid-cols-2 gap-1.5 mb-5 transition-all duration-300 ${
-                        isHovered
-                          ? "opacity-100 translate-y-0"
-                          : "opacity-0 translate-y-3"
-                      }`}
-                    >
-                      {cat.subCategories.map((sub) => (
-                        <span
-                          key={sub}
-                          className="text-xs text-zinc-400 px-2 py-1 rounded-lg bg-white/5 hover:bg-[#ff9900]/15 hover:text-[#ff9900] transition-colors cursor-pointer truncate"
-                        >
-                          {sub}
-                        </span>
-                      ))}
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 text-gray-300 group-hover/card:text-[#ff9900] transition-colors">
+                      {ICONS[cat.id]}
                     </div>
 
-                    {/* CTA */}
-                    <button
-                      className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${
-                        isHovered
-                          ? "bg-[#ff9900] text-black"
-                          : "bg-white/8 text-white hover:bg-white/15"
-                      }`}
-                    >
-                      Ver {cat.nameEs}
-                      <ArrowRight
-                        size={16}
-                        className={`transition-transform duration-200 ${
-                          isHovered ? "translate-x-1" : ""
-                        }`}
-                      />
-                    </button>
-                  </div>
+                    <div>
+                      <div className="font-black text-gray-900 text-sm sm:text-base group-hover/card:text-[#ff9900] transition-colors text-center">
+                        {cat.name}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-0.5 text-center">{cat.count} productos</div>
+                    </div>
+
+                    <div className="flex items-center gap-1 text-gray-300 group-hover/card:text-[#ff9900] transition-all text-xs font-semibold mt-auto">
+                      Ver categoria
+                      <ArrowRight size={13} className="group-hover/card:translate-x-0.5 transition-transform" />
+                    </div>
+                  </Link>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+
         </div>
       </div>
     </section>
