@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Jost } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "./context/CartContext";
 import CartDrawer from "./components/CartDrawer";
 
-const geist = Geist({
-  variable: "--font-geist",
+const jost = Jost({
+  variable: "--font-jost",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800", "900"],
+  style: ["normal", "italic"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -23,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${geist.variable} h-full`}>
+    <html lang="es" className={`${jost.variable} h-full`}>
       <body className="min-h-full flex flex-col bg-white antialiased">
         <CartProvider>
           {children}

@@ -162,11 +162,8 @@ export default function CategoryMatrix() {
     <section ref={sectionRef} id="categories" className="bg-gray-50 py-10 md:py-12 overflow-hidden bg-[url('https://www.eceiza.net/wp-content/uploads/2018/10/carreteras-clasificacion.jpg')] bg-no-repeat bg-center bg-cover">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 sm:mb-8 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-3 sm:mb-5 gap-4">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#ff9900] mb-2">
-              Categorias
-            </p>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
               Explora nuestro catalogo.
             </h2>

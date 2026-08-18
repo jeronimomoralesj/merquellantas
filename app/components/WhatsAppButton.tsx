@@ -32,8 +32,8 @@ export default function WhatsAppButton() {
           aria-label="Contactar por WhatsApp"
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
-          className="relative w-14 h-14 rounded-full flex items-center justify-center shadow-[0_8px_24px_rgba(37,211,102,0.4)] hover:shadow-[0_8px_32px_rgba(37,211,102,0.6)] hover:scale-105 active:scale-95 transition-all duration-150"
-          style={{ backgroundColor: "#25D366" }}
+          className="relative w-14 h-14 rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-150 backdrop-blur-sm border border-[#25D366]/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_8px_24px_rgba(37,211,102,0.38)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_8px_32px_rgba(37,211,102,0.55)]"
+          style={{ backgroundColor: "rgba(37,211,102,0.92)" }}
         >
           {/* WhatsApp icon SVG */}
           <svg

@@ -7,17 +7,63 @@ import { ALL_PRODUCTS, type Product } from "../lib/products";
 import { useCart } from "../context/CartContext";
 
 const BADGE_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  "best-seller": { bg: "bg-[#ff9900]",   text: "text-black",  label: "Mas vendido" },
+  "best-seller": { bg: "bg-[#ff9900]",   text: "text-black",  label: "Más vendido"     },
   "flash-deal":  { bg: "bg-rose-500",    text: "text-white",  label: "Oferta limitada" },
-  "new":         { bg: "bg-emerald-500", text: "text-white",  label: "Nuevo" },
-  "hot":         { bg: "bg-violet-500",  text: "text-white",  label: "Popular" },
+  "new":         { bg: "bg-emerald-500", text: "text-white",  label: "Nuevo"            },
+  "hot":         { bg: "bg-violet-500",  text: "text-white",  label: "Popular"          },
 };
+
+const TRUST = [
+  {
+    label: "Pago 100% seguro",
+    sub: "SSL · PSE · Tarjetas",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+    ),
+  },
+  {
+    label: "Garantía oficial",
+    sub: "Marcas certificadas",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+    ),
+  },
+  {
+    label: "Envío a todo el país",
+    sub: "Express disponible",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="1" y="3" width="15" height="13" rx="1"/>
+        <path d="M16 8h4l3 3v5h-7V8z"/>
+        <circle cx="5.5" cy="18.5" r="2.5"/>
+        <circle cx="18.5" cy="18.5" r="2.5"/>
+      </svg>
+    ),
+  },
+  {
+    label: "Devolución fácil",
+    sub: "30 días sin preguntas",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+        <path d="M3 3v5h5"/>
+      </svg>
+    ),
+  },
+];
 
 function Stars({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((i) => (
-        <Star key={i} size={11}
+        <Star
+          key={i}
+          size={11}
           className={i <= Math.round(rating) ? "text-[#ff9900]" : "text-gray-200"}
           fill={i <= Math.round(rating) ? "#ff9900" : "transparent"}
         />
@@ -38,136 +84,198 @@ function ProductCard({ product }: { product: Product }) {
   }
 
   return (
-    <div className="flex-none w-[272px] sm:w-72 bg-white border border-gray-100 rounded-2xl overflow-hidden group hover:border-[#ff9900]/30 hover:shadow-[0_4px_24px_rgba(255,153,0,0.10)] transition-all duration-300">
+    <div className="flex-none w-[268px] sm:w-[284px] rounded-3xl overflow-hidden group hover:-translate-y-1.5 transition-all duration-400 flex flex-col min-h-[430px] bg-white/55 backdrop-blur-2xl border border-white/72 shadow-[inset_0_2px_0_rgba(255,255,255,0.95),inset_0_0_0_1px_rgba(255,255,255,0.4),0_4px_20px_rgba(0,0,0,0.06)] hover:bg-white/70 hover:shadow-[inset_0_2px_0_rgba(255,255,255,1),0_20px_56px_rgba(0,0,0,0.11)]">
 
-      {/* Image area */}
-      <Link href={`/products/${product.id}`}>
-        <div className="relative h-44 overflow-hidden cursor-pointer"
-          style={!product.images?.[0] ? { background: `linear-gradient(135deg, ${product.bgFrom}, ${product.bgTo})` } : {}}>
+      {/* Image */}
+      <Link href={`/products/${product.id}`} className="block flex-shrink-0">
+        <div
+          className="relative h-[200px] overflow-hidden flex items-center justify-center"
+          style={
+            !product.images?.[0]
+              ? { background: `linear-gradient(135deg, ${product.bgFrom}, ${product.bgTo})` }
+              : { background: "rgba(255,255,255,0.60)" }
+          }
+        >
           {product.images?.[0] ? (
             /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={product.images[0]} alt={product.name} className="w-full h-full object-contain bg-gray-50 p-3" />
+            <img
+              src={product.images[0]}
+              alt={product.name}
+              className="w-full h-full object-contain p-5 transition-transform duration-500 group-hover:scale-[1.04]"
+            />
           ) : (
-            <div className="flex flex-col items-center justify-center h-full gap-1.5">
-              <span className="text-3xl font-black text-white/20 tracking-tight select-none leading-none">{product.brand}</span>
+            <div className="flex flex-col items-center justify-center gap-2 p-6 text-center">
+              <span className="text-3xl font-black text-white/20 tracking-tight leading-none">
+                {product.brand}
+              </span>
               <span className="text-xs text-white/30 font-semibold">{product.specs[0]}</span>
             </div>
           )}
+
+          {/* Badge */}
           {badge && (
-            <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wide ${badge.bg} ${badge.text}`}>
+            <div
+              className={`absolute top-3.5 left-3.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wide ${badge.bg} ${badge.text}`}
+            >
               {badge.label}
             </div>
           )}
+
+          {/* Discount pill */}
           {product.discountPct && (
-            <div className="absolute top-3 right-3 px-2 py-0.5 rounded-md bg-white text-rose-500 text-xs font-black border border-rose-100">
+            <div className="absolute top-3.5 right-3.5 px-2 py-1 rounded-full bg-white text-rose-500 text-[11px] font-black shadow-sm">
               -{product.discountPct}%
             </div>
           )}
-          <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#ff9900] scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
         </div>
       </Link>
 
-      <div className="p-5">
-        <p className="text-[10px] font-black uppercase tracking-widest text-[#ff9900] mb-1">
+      {/* Info */}
+      <div className="flex flex-col flex-1 px-6 pb-6 pt-5">
+        <p className="text-[10px] font-black uppercase tracking-widest text-[#ff9900] mb-1.5">
           {product.brand}
         </p>
+
         <Link href={`/products/${product.id}`}>
-          <h3 className="text-gray-900 font-bold text-sm leading-snug mb-2 group-hover:text-[#ff9900] transition-colors cursor-pointer">
+          <h3 className="text-gray-900 font-bold text-[14.5px] leading-snug mb-3 group-hover:text-[#ff9900] transition-colors line-clamp-2 cursor-pointer">
             {product.name}
           </h3>
         </Link>
 
-        <div className="flex flex-wrap gap-1 mb-3">
+        {/* Specs */}
+        <div className="flex flex-wrap gap-1.5 mb-3">
           {product.specs.slice(0, 3).map((s) => (
-            <span key={s} className="text-[11px] text-gray-400 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+            <span
+              key={s}
+              className="text-[11px] text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100"
+            >
               {s}
             </span>
           ))}
         </div>
 
-        <div className="flex items-center gap-2 mb-4">
+        {/* Rating */}
+        <div className="flex items-center gap-2 mb-5">
           <Stars rating={product.rating} />
-          <span className="text-gray-500 text-xs">{product.rating}</span>
+          <span className="text-[12px] font-semibold text-gray-400">{product.rating}</span>
           <span className="text-gray-300 text-xs">({product.reviewCount.toLocaleString()})</span>
         </div>
 
-        <div className="flex items-end justify-between gap-2">
+        {/* Price */}
+        <div className="flex items-end justify-between mb-4 mt-auto">
           <div>
-            <div className="text-gray-900 font-black text-lg leading-none">
+            <div className="text-[22px] font-black text-gray-900 leading-none">
               ${product.price.toLocaleString("es-CO")}
             </div>
             {product.originalPrice && (
-              <div className="text-gray-300 text-xs line-through mt-0.5">
+              <div className="text-gray-300 text-xs line-through mt-1">
                 ${product.originalPrice.toLocaleString("es-CO")}
               </div>
             )}
           </div>
-          <button
-            onClick={handleAdd}
-            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex-shrink-0 ${
-              added
-                ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
-                : "bg-[#ff9900] text-black hover:bg-[#e68a00] active:scale-[0.97] shadow-[0_2px_8px_rgba(255,153,0,0.3)]"
-            }`}
-          >
-            {added ? <><Check size={13} /> Agregado</> : <><ShoppingCart size={13} /> Agregar</>}
-          </button>
+          {product.discountPct && (
+            <span className="text-rose-500 text-sm font-bold mb-0.5">
+              -{product.discountPct}%
+            </span>
+          )}
         </div>
+
+        {/* CTA */}
+        <button
+          onClick={handleAdd}
+          className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-[13px] font-bold transition-all active:scale-[0.98] ${
+            added
+              ? "bg-emerald-50 text-emerald-600 border border-emerald-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]"
+              : "bg-[#ff9900]/95 backdrop-blur-sm text-black hover:bg-[#e68a00] border border-[#ffb84d]/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_2px_12px_rgba(255,153,0,0.28)]"
+          }`}
+        >
+          {added ? (
+            <><Check size={14} /> Agregado al carrito</>
+          ) : (
+            <><ShoppingCart size={14} /> Agregar al carrito</>
+          )}
+        </button>
       </div>
     </div>
   );
 }
 
 const FILTERS = [
-  { id: "all",         label: "Todo" },
-  { id: "llantas",     label: "Llantas" },
+  { id: "all",         label: "Todo"        },
+  { id: "llantas",     label: "Llantas"     },
   { id: "lubricantes", label: "Lubricantes" },
-  { id: "baterias",    label: "Baterias" },
-  { id: "rines",       label: "Rines" },
-  { id: "accesorios",  label: "Accesorios" },
+  { id: "baterias",    label: "Baterías"    },
+  { id: "rines",       label: "Rines"       },
+  { id: "accesorios",  label: "Accesorios"  },
 ];
 
 export default function FlashDeals() {
   const [filter, setFilter] = useState("all");
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const products = filter === "all" ? ALL_PRODUCTS : ALL_PRODUCTS.filter((p) => p.category === filter);
-  const scroll = (dir: "left" | "right") =>
-    scrollRef.current?.scrollBy({ left: dir === "right" ? 300 : -300, behavior: "smooth" });
+  const products =
+    filter === "all" ? ALL_PRODUCTS : ALL_PRODUCTS.filter((p) => p.category === filter);
+
+  function scroll(dir: "left" | "right") {
+    scrollRef.current?.scrollBy({ left: dir === "right" ? 320 : -320, behavior: "smooth" });
+  }
 
   return (
-    <section id="offers" className="bg-white pt-12 pb-20">
+    <section
+      id="offers"
+      className="pt-16 pb-20"
+      style={{ background: "linear-gradient(140deg, #eeeef4 0%, #f5f5f7 50%, #ebebf2 100%)" }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-5">
+
+        {/* ── Header ─────────────────────────────────────────────── */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-6">
           <div>
-            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
-              Productos destacados
-              <br />
-              y ofertas activas.
+            <h2
+              className="font-black text-gray-900 tracking-tight leading-[0.92]"
+              style={{ fontSize: "clamp(2rem, 4.5vw, 3.5rem)" }}
+            >
+              Productos<br />destacados.
             </h2>
+            <p className="text-gray-400 text-[13px] mt-3 font-medium">
+              Envío gratuito en compras mayores a $200.000
+            </p>
           </div>
-          <div className="flex items-center gap-2 self-end sm:self-auto">
-            <button onClick={() => scroll("left")}
-              className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:border-[#ff9900] hover:text-[#ff9900] transition-all">
-              <ChevronLeft size={17} />
+
+          <div className="flex items-center gap-3 self-end sm:self-auto">
+            <button
+              onClick={() => scroll("left")}
+              className="w-10 h-10 rounded-full bg-white/75 backdrop-blur-md border border-black/[0.07] flex items-center justify-center text-gray-400 hover:text-gray-900 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_2px_8px_rgba(0,0,0,0.07)] hover:bg-white/95"
+              aria-label="Anterior"
+            >
+              <ChevronLeft size={18} />
             </button>
-            <button onClick={() => scroll("right")}
-              className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:border-[#ff9900] hover:text-[#ff9900] transition-all">
-              <ChevronRight size={17} />
+            <button
+              onClick={() => scroll("right")}
+              className="w-10 h-10 rounded-full bg-white/75 backdrop-blur-md border border-black/[0.07] flex items-center justify-center text-gray-400 hover:text-gray-900 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_2px_8px_rgba(0,0,0,0.07)] hover:bg-white/95"
+              aria-label="Siguiente"
+            >
+              <ChevronRight size={18} />
             </button>
+            <Link
+              href="/products"
+              className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-gray-400 hover:text-[#ff9900] transition-colors ml-1"
+            >
+              Ver todo <ArrowRight size={14} />
+            </Link>
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="flex items-center gap-2 mb-7 overflow-x-auto no-scrollbar pb-1">
+        {/* ── Filter pills ───────────────────────────────────────── */}
+        <div className="flex items-center gap-2 mb-8 overflow-x-auto no-scrollbar pb-1">
           {FILTERS.map((f) => (
             <button
               key={f.id}
               onClick={() => setFilter(f.id)}
-              className={`flex-none px-4 py-2 rounded-lg text-sm font-semibold transition-all border ${
+              className={`flex-none px-4 py-2 rounded-full text-[13px] font-semibold transition-all whitespace-nowrap ${
                 filter === f.id
-                  ? "bg-[#ff9900] text-black border-[#ff9900]"
-                  : "bg-white text-gray-500 border-gray-200 hover:border-[#ff9900]/40 hover:text-gray-700"
+                  ? "bg-gray-900/90 backdrop-blur-sm text-white border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.07)]"
+                  : "bg-white/80 backdrop-blur-md text-gray-500 hover:text-gray-900 border border-black/[0.07] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_1px_4px_rgba(0,0,0,0.05)] hover:bg-white/95"
               }`}
             >
               {f.label}
@@ -175,23 +283,54 @@ export default function FlashDeals() {
           ))}
         </div>
 
-        {/* Carousel */}
-        <div ref={scrollRef} className="flex gap-4 overflow-x-auto no-scrollbar pb-4">
+        {/* ── Product carousel ───────────────────────────────────── */}
+        {/*
+          overflow-x: auto also clips overflow-y in CSS spec.
+          paddingTop + negative marginTop extends the scroll container's
+          boundary upward so hover-lifted cards don't get clipped.
+        */}
+        <div
+          ref={scrollRef}
+          className="flex gap-4 overflow-x-auto no-scrollbar pb-4"
+          style={{ paddingTop: "16px", marginTop: "-16px" }}
+        >
           {products.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
+
+          {/* See-all card */}
           <Link
             href="/products"
-            className="flex-none w-52 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-3 hover:border-[#ff9900]/40 transition-colors cursor-pointer group min-h-[380px]"
+            className="flex-none w-[200px] bg-white rounded-3xl flex flex-col items-center justify-center gap-4 hover:-translate-y-2 hover:shadow-xl transition-all duration-400 cursor-pointer group min-h-[420px] px-6"
           >
-            <div className="w-10 h-10 rounded-full bg-[#ff9900]/10 flex items-center justify-center group-hover:bg-[#ff9900]/20 transition-colors">
-              <ArrowRight size={18} className="text-[#ff9900]" />
+            <div className="w-12 h-12 rounded-full bg-[#ff9900]/10 group-hover:bg-[#ff9900] flex items-center justify-center transition-colors duration-300">
+              <ArrowRight
+                size={18}
+                className="text-[#ff9900] group-hover:text-black transition-colors"
+              />
             </div>
-            <div className="text-center px-4">
-              <p className="text-gray-700 font-bold text-sm">Ver catalogo</p>
-              <p className="text-gray-400 text-xs mt-0.5">+1.600 productos</p>
+            <div className="text-center">
+              <p className="text-gray-800 font-bold text-sm group-hover:text-[#ff9900] transition-colors">
+                Ver catálogo completo
+              </p>
+              <p className="text-gray-400 text-xs mt-1">+1.600 productos</p>
             </div>
           </Link>
+        </div>
+
+        {/* ── Trust strip ────────────────────────────────────────── */}
+        <div className="mt-14 pt-10 border-t border-black/[0.06] grid grid-cols-2 lg:grid-cols-4 gap-6">
+          {TRUST.map((item) => (
+            <div key={item.label} className="flex items-center gap-3">
+              <div className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center shadow-sm flex-shrink-0 text-[#ff9900]">
+                {item.icon}
+              </div>
+              <div>
+                <p className="text-[13.5px] font-bold text-gray-900 leading-tight">{item.label}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{item.sub}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>

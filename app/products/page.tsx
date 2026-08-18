@@ -3,33 +3,23 @@
 import { useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ShoppingCart, Star, Check, SlidersHorizontal, X, ChevronDown, ArrowLeft } from "lucide-react";
-import { ALL_PRODUCTS, CATEGORY_LABELS, type Product, type ProductCategory } from "../lib/products";
+import {
+  ShoppingCart, Star, Check, SlidersHorizontal, X,
+  ChevronDown, ArrowLeft, ChevronLeft, ChevronRight, ArrowUpDown,
+} from "lucide-react";
+import {
+  ALL_PRODUCTS, CATEGORY_LABELS,
+  type Product, type ProductCategory,
+} from "../lib/products";
+import { TIRE_WIDTHS, TIRE_PROFILES, RIM_SIZES } from "../lib/mockData";
 import { useCart } from "../context/CartContext";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import WhatsAppButton from "../components/WhatsAppButton";
 
-/* ── Helpers ─────────────────────────────────────────────────────────── */
-function Stars({ rating }: { rating: number }) {
-  return (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star key={i} size={11}
-          className={i <= Math.round(rating) ? "text-[#ff9900]" : "text-gray-200"}
-          fill={i <= Math.round(rating) ? "#ff9900" : "transparent"}
-        />
-      ))}
-    </div>
-  );
-}
+// ── Constants ───────────────────────────────────────────────────────────────
 
-const BADGE_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  "best-seller": { bg: "bg-[#ff9900]",   text: "text-black",  label: "Mas vendido" },
-  "flash-deal":  { bg: "bg-rose-500",    text: "text-white",  label: "Oferta limitada" },
-  "new":         { bg: "bg-emerald-500", text: "text-white",  label: "Nuevo" },
-  "hot":         { bg: "bg-violet-500",  text: "text-white",  label: "Popular" },
-};
-
+const PER_PAGE   = 10;
 const ALL_BRANDS = [...new Set(ALL_PRODUCTS.map((p) => p.brand))].sort();
 
 const SORT_OPTIONS = [
@@ -39,204 +29,525 @@ const SORT_OPTIONS = [
   { id: "rating",     label: "Mejor valorados" },
 ];
 
-/* ── Product card ─────────────────────────────────────────────────────── */
+const HERO_VIDEO =
+  "https://res.cloudinary.com/dbomhbkop/video/upload/q_auto/f_auto/v1777913275/Continental_Tire_The_Smart_Choice_In_Tires._-_Continental_Tire_1080p_h264_cezari.mp4";
+
+const ALKOSTO_IDS = new Set([
+  "michelin-primacy4-20555r16",
+  "continental-sportcontact7-22545r17",
+  "bridgestone-dueler-at-26570r16",
+  "pirelli-pzero-25540r18",
+  "michelin-pilot-sport4-23535r19",
+  "bosch-s4-60ah",
+  "bosch-s5-72ah",
+]);
+
+const ALKOSTO_LOGO = "https://upload.wikimedia.org/wikipedia/commons/9/9a/Alkosto_HiperAhorro.png";
+
+const BADGE_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+  "best-seller": { bg: "bg-amber-400",  text: "text-black",  label: "Mas vendido" },
+  "flash-deal":  { bg: "bg-rose-500",   text: "text-white",  label: "Oferta" },
+  "new":         { bg: "bg-teal-500",   text: "text-white",  label: "Nuevo" },
+  "hot":         { bg: "bg-violet-500", text: "text-white",  label: "Popular" },
+};
+
+// ── TireRing — lightweight watermark ────────────────────────────────────────
+
+function TireRing({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 200 200" fill="none" className={className}>
+      {/* Outer bead */}
+      <circle cx="100" cy="100" r="96" stroke="currentColor" strokeWidth="1.5" />
+      {/* Tread blocks */}
+      <circle cx="100" cy="100" r="88" stroke="currentColor" strokeWidth="12"
+        strokeDasharray="15 7" strokeLinecap="butt" />
+      {/* Tread inner edge */}
+      <circle cx="100" cy="100" r="80" stroke="currentColor" strokeWidth="1" />
+      {/* Sidewall */}
+      <circle cx="100" cy="100" r="72" stroke="currentColor" strokeWidth="0.8" strokeDasharray="4 4" />
+      {/* Rim edge */}
+      <circle cx="100" cy="100" r="60" stroke="currentColor" strokeWidth="1.5" />
+      {/* Rim spokes (5) */}
+      {Array.from({ length: 5 }).map((_, i) => {
+        const a = (i / 5) * 2 * Math.PI;
+        return (
+          <line key={i}
+            x1={100 + 20 * Math.sin(a)} y1={100 - 20 * Math.cos(a)}
+            x2={100 + 58 * Math.sin(a)} y2={100 - 58 * Math.cos(a)}
+            stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        );
+      })}
+      {/* Hub */}
+      <circle cx="100" cy="100" r="18" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="100" cy="100" r="6" fill="currentColor" />
+    </svg>
+  );
+}
+
+// ── TireTrack — decorative tread strip for grid background ──────────────────
+
+function TireTrackStrip({ vertical = true }: { vertical?: boolean }) {
+  const blocks = Array.from({ length: 40 });
+  return (
+    <svg
+      viewBox={vertical ? "0 0 18 320" : "0 0 320 18"}
+      fill="none"
+      preserveAspectRatio="none"
+      className={vertical ? "w-[18px] h-full" : "h-[18px] w-full"}
+    >
+      {/* Two rail lines */}
+      {vertical ? (
+        <>
+          <line x1="2" y1="0" x2="2" y2="320" stroke="currentColor" strokeWidth="1" />
+          <line x1="16" y1="0" x2="16" y2="320" stroke="currentColor" strokeWidth="1" />
+          {blocks.map((_, i) => (
+            <rect key={i} x="2" y={i * 8 + 1} width="14" height="5" rx="1" fill="currentColor" />
+          ))}
+        </>
+      ) : (
+        <>
+          <line x1="0" y1="2" x2="320" y2="2" stroke="currentColor" strokeWidth="1" />
+          <line x1="0" y1="16" x2="320" y2="16" stroke="currentColor" strokeWidth="1" />
+          {blocks.map((_, i) => (
+            <rect key={i} x={i * 8 + 1} y="2" width="5" height="14" rx="1" fill="currentColor" />
+          ))}
+        </>
+      )}
+    </svg>
+  );
+}
+
+// ── Stars ───────────────────────────────────────────────────────────────────
+
+function Stars({ rating }: { rating: number }) {
+  return (
+    <span className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star key={i} size={11}
+          className={i <= Math.round(rating) ? "text-[#ff9900]" : "text-gray-200"}
+          fill={i <= Math.round(rating) ? "#ff9900" : "transparent"} />
+      ))}
+    </span>
+  );
+}
+
+// ── ProductCard ──────────────────────────────────────────────────────────────
+
 function ProductCard({ product }: { product: Product }) {
-  const [added, setAdded] = useState(false);
   const { addToCart } = useCart();
-  const badge = product.badge ? BADGE_STYLES[product.badge] : null;
+  const [added, setAdded] = useState(false);
+  const badge        = product.badge ? BADGE_STYLES[product.badge] : null;
+  const installment  = Math.round(product.price / 4);
+  const hasAlkosto   = ALKOSTO_IDS.has(product.id);
+
+  function handleAdd(e: React.MouseEvent) {
+    e.preventDefault(); e.stopPropagation();
+    addToCart(product); setAdded(true);
+    setTimeout(() => setAdded(false), 2200);
+  }
 
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden group hover:border-[#ff9900]/30 hover:shadow-[0_4px_24px_rgba(255,153,0,0.10)] transition-all duration-300 flex flex-col">
-      <Link href={`/products/${product.id}`}>
-        <div className="h-80 relative overflow-hidden"
-          style={!product.images?.[0] ? { background: `linear-gradient(135deg, ${product.bgFrom}, ${product.bgTo})` } : {}}>
-          {product.images?.[0] ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={product.images[0]} alt={product.name} className="w-full h-full object-contain bg-gray-50 p-3" />
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full gap-1">
-              <span className="text-3xl font-black text-white/20 tracking-tight select-none">{product.brand}</span>
-              <span className="text-xs text-white/25 font-semibold">{product.specs[0]}</span>
-            </div>
-          )}
-          {badge && (
-            <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wide ${badge.bg} ${badge.text}`}>
-              {badge.label}
-            </div>
-          )}
-          {product.discountPct && (
-            <div className="absolute top-3 right-3 px-2 py-0.5 rounded-md bg-white text-rose-500 text-xs font-black border border-rose-100">
-              -{product.discountPct}%
-            </div>
-          )}
-          <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#ff9900] scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
-        </div>
-      </Link>
+    <Link href={`/products/${product.id}`} className="block group">
+      <article className="bg-white/80 backdrop-blur-xl border border-white/90 rounded-2xl
+        overflow-hidden
+        shadow-[0_1px_4px_rgba(0,0,0,0.04),0_2px_12px_rgba(0,0,0,0.04)]
+        hover:shadow-[0_4px_28px_rgba(0,0,0,0.10)] hover:-translate-y-0.5
+        transition-all duration-300">
+        <div className="flex flex-col sm:flex-row">
 
-      <div className="p-5 flex flex-col flex-1">
-        <p className="text-[10px] font-black uppercase tracking-widest text-[#ff9900] mb-1">{product.brand}</p>
-        <Link href={`/products/${product.id}`}>
-          <h3 className="text-gray-900 font-bold text-sm leading-snug mb-2 group-hover:text-[#ff9900] transition-colors">
-            {product.name}
-          </h3>
-        </Link>
-        <div className="flex flex-wrap gap-1 mb-3">
-          {product.specs.slice(0, 2).map((s) => (
-            <span key={s} className="text-[11px] text-gray-400 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">{s}</span>
-          ))}
-        </div>
-        <div className="flex items-center gap-1.5 mb-1">
-          <Stars rating={product.rating} />
-          <span className="text-xs text-gray-400">({product.reviewCount.toLocaleString()})</span>
-        </div>
-        <p className="text-xs text-gray-400 mb-4 leading-relaxed flex-1">{product.shortDesc}</p>
-
-        <div className="flex items-end justify-between gap-2 mt-auto">
-          <div>
-            <div className="text-gray-900 font-black text-xl leading-none">${product.price.toLocaleString("es-CO")}</div>
-            {product.originalPrice && (
-              <div className="text-gray-300 text-xs line-through mt-0.5">${product.originalPrice.toLocaleString("es-CO")}</div>
+          {/* Image */}
+          <div className="sm:w-52 lg:w-60 flex-shrink-0 flex items-center justify-center
+            relative overflow-hidden h-52 sm:h-auto min-h-[200px]"
+            style={!product.images?.[0]
+              ? { background: `linear-gradient(145deg, ${product.bgFrom} 0%, ${product.bgTo} 100%)` }
+              : { background: "#f5f5f7" }}>
+            {product.images?.[0] ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={product.images[0]} alt={product.name}
+                className="w-full h-full object-contain p-6 transition-transform duration-500 group-hover:scale-[1.04]" />
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-2 p-6
+                transition-transform duration-500 group-hover:scale-[1.04]">
+                <span className="text-4xl font-bold text-white/12 tracking-tighter select-none">{product.brand}</span>
+                <span className="text-xs text-white/20 font-medium">{product.specs[0]}</span>
+              </div>
+            )}
+            {badge && (
+              <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-full
+                text-[10px] font-bold uppercase tracking-wide ${badge.bg} ${badge.text}`}>
+                {badge.label}
+              </div>
+            )}
+            {product.discountPct && (
+              <div className="absolute top-3 right-3 px-2 py-0.5 rounded-lg
+                bg-rose-50 text-rose-500 text-xs font-bold border border-rose-100">
+                -{product.discountPct}%
+              </div>
             )}
           </div>
-          <button
-            onClick={() => { addToCart(product); setAdded(true); setTimeout(() => setAdded(false), 2000); }}
-            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex-shrink-0 ${
-              added
-                ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
-                : "bg-[#ff9900] text-black hover:bg-[#e68a00] active:scale-[0.97] shadow-[0_2px_8px_rgba(255,153,0,0.3)]"
-            }`}
-          >
-            {added ? <><Check size={13} /> Agregado</> : <><ShoppingCart size={13} /> Agregar</>}
-          </button>
+
+          <div className="hidden sm:block w-px bg-gray-50 flex-shrink-0 self-stretch" />
+
+          {/* Content */}
+          <div className="flex-1 p-6 flex flex-col min-w-0">
+            <div className="flex items-center gap-2 mb-2.5">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#ff9900]">{product.brand}</span>
+              <span className="text-gray-200 text-xs">·</span>
+              <span className="text-[10px] text-gray-400 font-medium">{CATEGORY_LABELS[product.category]}</span>
+            </div>
+            <h2 className="text-[#1d1d1f] font-semibold text-xl leading-snug mb-2.5
+              group-hover:text-[#ff9900] transition-colors duration-200 line-clamp-2">
+              {product.name}
+            </h2>
+            <div className="flex items-center gap-2 mb-3">
+              <Stars rating={product.rating} />
+              <span className="text-sm font-semibold text-[#1d1d1f]">{product.rating}</span>
+              <span className="text-sm text-[#6e6e73]">({product.reviewCount.toLocaleString()} reseñas)</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5 mb-3.5">
+              {product.specs.map((s) => (
+                <span key={s} className="text-[11px] text-[#6e6e73] bg-[#f5f5f7] px-2.5 py-1
+                  rounded-lg font-medium border border-gray-100">{s}</span>
+              ))}
+            </div>
+            <p className="text-sm text-[#6e6e73] leading-relaxed line-clamp-2 flex-1">
+              {product.shortDesc}
+            </p>
+
+            {/* Partner badges */}
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              {/* MerqueClub — every product */}
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg
+                bg-[#ff9900]/[0.08] border border-[#ff9900]/20 text-[10px] font-semibold text-[#c47800]">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  <circle cx="5" cy="5" r="4.5" fill="#ff9900" />
+                  <path d="M3 5.5l1.3 1.3L7 3.5" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Beneficios MerqueClub
+              </span>
+              {/* Alkosto — selected products */}
+              {hasAlkosto && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg
+                  bg-[#e8000b]/[0.06] border border-[#e8000b]/15 text-[10px] font-semibold text-[#b50009]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={ALKOSTO_LOGO} alt="Alkosto" className="h-3.5 object-contain" />
+                  Recibe con Alkosto
+                </span>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-end justify-between gap-4 mt-4 pt-4 border-t border-gray-50">
+              <div>
+                <div className="flex items-baseline gap-2.5">
+                  <span className="text-2xl font-semibold text-[#1d1d1f] leading-none">
+                    ${product.price.toLocaleString("es-CO")}
+                  </span>
+                  {product.originalPrice && (
+                    <span className="text-sm text-gray-300 line-through font-normal">
+                      ${product.originalPrice.toLocaleString("es-CO")}
+                    </span>
+                  )}
+                </div>
+                <div className="text-[11px] text-[#6e6e73] mt-1">
+                  o 4 cuotas de ${installment.toLocaleString("es-CO")} sin interés
+                </div>
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${product.inStock ? "bg-teal-500" : "bg-red-400"}`} />
+                  <span className={`text-[11px] font-medium ${product.inStock ? "text-teal-600" : "text-red-500"}`}>
+                    {product.inStock ? `En stock · ${product.stockCount} disponibles` : "Agotado"}
+                  </span>
+                </div>
+              </div>
+              <button onClick={handleAdd} disabled={!product.inStock}
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold
+                  transition-all flex-shrink-0 ${
+                    added
+                      ? "bg-teal-50 text-teal-600 border border-teal-200"
+                      : product.inStock
+                      ? "bg-[#ff9900] text-black hover:bg-[#e68a00] active:scale-[0.97] shadow-[0_2px_12px_rgba(255,153,0,0.3)]"
+                      : "bg-gray-100 text-gray-300 cursor-not-allowed"
+                  }`}>
+                {added ? <><Check size={15} /> Agregado</> : <><ShoppingCart size={15} /> Agregar al carrito</>}
+              </button>
+            </div>
+          </div>
         </div>
+      </article>
+    </Link>
+  );
+}
+
+// ── FilterSection ────────────────────────────────────────────────────────────
+
+function FilterSection({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="pb-4 mb-4 border-b border-gray-100/80 last:border-0 last:pb-0 last:mb-0">
+      <button onClick={() => setOpen((v) => !v)}
+        className="flex items-center justify-between w-full mb-3 group/sec">
+        <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400
+          group-hover/sec:text-gray-600 transition-colors">
+          {title}
+        </span>
+        <ChevronDown size={13}
+          className={`text-gray-300 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && children}
+    </div>
+  );
+}
+
+// ── DimChips ─────────────────────────────────────────────────────────────────
+
+function DimChips({
+  values, selected, onToggle,
+}: {
+  values: string[];
+  selected: string[];
+  onToggle: (v: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-1">
+      {values.map((v) => (
+        <button key={v} onClick={() => onToggle(v)}
+          className={`text-[10px] px-2 py-0.5 rounded-md font-semibold transition-all ${
+            selected.includes(v)
+              ? "bg-[#ff9900] text-black shadow-[0_1px_4px_rgba(255,153,0,0.4)]"
+              : "bg-gray-100 text-[#6e6e73] hover:bg-gray-200"
+          }`}>
+          {v}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── FilterControls ───────────────────────────────────────────────────────────
+
+function FilterControls({
+  category, setCategory,
+  brands, setBrands,
+  maxPrice, setMaxPrice,
+  inStockOnly, setInStockOnly,
+  selWidths, setSelWidths,
+  selProfiles, setSelProfiles,
+  selRims, setSelRims,
+}: {
+  category: string; setCategory: (c: string) => void;
+  brands: string[]; setBrands: (b: string[]) => void;
+  maxPrice: number; setMaxPrice: (p: number) => void;
+  inStockOnly: boolean; setInStockOnly: (v: boolean) => void;
+  selWidths: string[]; setSelWidths: (v: string[]) => void;
+  selProfiles: string[]; setSelProfiles: (v: string[]) => void;
+  selRims: string[]; setSelRims: (v: string[]) => void;
+}) {
+  const toggleArr = (arr: string[], set: (v: string[]) => void, val: string) =>
+    set(arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val]);
+
+  const toggleBrand = (b: string) =>
+    setBrands(brands.includes(b) ? brands.filter((x) => x !== b) : [...brands, b]);
+
+  const showDims = category === "all" || category === "llantas";
+
+  return (
+    <div>
+      {/* Category */}
+      <FilterSection title="Categoría">
+        <div className="space-y-0.5">
+          {["all", ...Object.keys(CATEGORY_LABELS)].map((c) => (
+            <button key={c} onClick={() => setCategory(c)}
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
+                category === c
+                  ? "bg-[#ff9900]/10 text-[#ff9900] font-semibold"
+                  : "text-[#6e6e73] hover:bg-gray-50 font-medium"
+              }`}>
+              {c === "all" ? "Todos" : CATEGORY_LABELS[c as ProductCategory]}
+            </button>
+          ))}
+        </div>
+      </FilterSection>
+
+      {/* Tire dimensions — only for llantas or all */}
+      {showDims && (
+        <FilterSection title="Medidas de llanta">
+          <div className="space-y-3">
+            <div>
+              <p className="text-[10px] text-gray-400 font-medium mb-1.5">Ancho</p>
+              <DimChips values={TIRE_WIDTHS} selected={selWidths}
+                onToggle={(v) => toggleArr(selWidths, setSelWidths, v)} />
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-400 font-medium mb-1.5">Perfil</p>
+              <DimChips values={TIRE_PROFILES} selected={selProfiles}
+                onToggle={(v) => toggleArr(selProfiles, setSelProfiles, v)} />
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-400 font-medium mb-1.5">Rin</p>
+              <DimChips values={RIM_SIZES} selected={selRims}
+                onToggle={(v) => toggleArr(selRims, setSelRims, v)} />
+            </div>
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Brands */}
+      <FilterSection title="Marca">
+        <div className="space-y-0.5 max-h-48 overflow-y-auto no-scrollbar">
+          {ALL_BRANDS.map((b) => (
+            <div key={b} onClick={() => toggleBrand(b)}
+              className="flex items-center gap-2.5 px-1 py-1.5 cursor-pointer
+                rounded-lg hover:bg-gray-50 transition-colors group/brand">
+              <div className={`w-4 h-4 rounded border flex items-center justify-center
+                flex-shrink-0 transition-all ${
+                  brands.includes(b)
+                    ? "bg-[#ff9900] border-[#ff9900]"
+                    : "border-gray-200 group-hover/brand:border-[#ff9900]/40"
+                }`}>
+                {brands.includes(b) && <Check size={10} className="text-black" />}
+              </div>
+              <span className="text-sm text-[#6e6e73] group-hover/brand:text-[#1d1d1f]
+                transition-colors font-medium">{b}</span>
+            </div>
+          ))}
+        </div>
+      </FilterSection>
+
+      {/* Price */}
+      <FilterSection title="Precio máximo">
+        <div className="px-1">
+          <input type="range" min={5000} max={1000000} step={10000}
+            value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))}
+            className="w-full accent-[#ff9900]" />
+          <p className="text-sm font-semibold text-[#1d1d1f] mt-2">
+            ${maxPrice.toLocaleString("es-CO")}
+          </p>
+        </div>
+      </FilterSection>
+
+      {/* In stock */}
+      <div onClick={() => setInStockOnly(!inStockOnly)}
+        className="flex items-center gap-3 cursor-pointer px-1 rounded-lg
+          hover:bg-gray-50 py-1.5 transition-colors">
+        <div className={`w-5 h-5 rounded border flex items-center justify-center
+          flex-shrink-0 transition-all ${
+            inStockOnly ? "bg-[#ff9900] border-[#ff9900]" : "border-gray-200"
+          }`}>
+          {inStockOnly && <Check size={12} className="text-black" />}
+        </div>
+        <span className="text-sm font-medium text-[#6e6e73]">Solo con disponibilidad</span>
       </div>
     </div>
   );
 }
 
-/* ── Filter sidebar ───────────────────────────────────────────────────── */
-function FilterSidebar({
-  category, setCategory,
-  brands, setBrands,
-  maxPrice, setMaxPrice,
-  inStockOnly, setInStockOnly,
-}: {
-  category: string;
-  setCategory: (c: string) => void;
-  brands: string[];
-  setBrands: (b: string[]) => void;
-  maxPrice: number;
-  setMaxPrice: (p: number) => void;
-  inStockOnly: boolean;
-  setInStockOnly: (v: boolean) => void;
+// ── BottomSheet ──────────────────────────────────────────────────────────────
+
+function BottomSheet({ open, onClose, title, children }: {
+  open: boolean; onClose: () => void; title: string; children: React.ReactNode;
 }) {
-  const toggleBrand = (b: string) =>
-    setBrands(brands.includes(b) ? brands.filter((x) => x !== b) : [...brands, b]);
-
   return (
-    <aside className="space-y-6">
-      {/* Category */}
-      <div>
-        <p className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-3">Categoria</p>
-        <div className="space-y-1">
-          <button
-            onClick={() => setCategory("all")}
-            className={`w-full text-left px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
-              category === "all"
-                ? "bg-[#ff9900]/10 text-[#ff9900]"
-                : "text-gray-600 hover:bg-gray-50"
-            }`}
-          >
-            Todos
+    <>
+      <div className={`fixed inset-0 z-[70] bg-black/25 backdrop-blur-sm
+        transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        onClick={onClose} />
+      <div className={`fixed inset-x-0 bottom-0 z-[80] flex flex-col
+        max-h-[88dvh] bg-white/96 backdrop-blur-2xl rounded-t-3xl
+        shadow-[0_-8px_40px_rgba(0,0,0,0.12)] border-t border-white/80
+        transition-transform duration-300 ease-out ${open ? "translate-y-0" : "translate-y-full"}`}>
+        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+          <div className="w-9 h-1 bg-gray-200 rounded-full" />
+        </div>
+        <div className="flex items-center justify-between px-6 py-3.5
+          border-b border-gray-100 flex-shrink-0">
+          <span className="font-semibold text-[#1d1d1f] text-[15px]">{title}</span>
+          <button onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-full
+              bg-gray-100 hover:bg-gray-200 transition-colors">
+            <X size={14} className="text-gray-500" />
           </button>
-          {(Object.keys(CATEGORY_LABELS) as ProductCategory[]).map((c) => (
-            <button
-              key={c}
-              onClick={() => setCategory(c)}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
-                category === c
-                  ? "bg-[#ff9900]/10 text-[#ff9900]"
-                  : "text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              {CATEGORY_LABELS[c]}
-            </button>
-          ))}
         </div>
+        <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
       </div>
-
-      {/* Brands */}
-      <div>
-        <p className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-3">Marca</p>
-        <div className="space-y-1 max-h-52 overflow-y-auto">
-          {ALL_BRANDS.map((b) => (
-            <label key={b} className="flex items-center gap-2.5 px-1 py-1 cursor-pointer group">
-              <div
-                onClick={() => toggleBrand(b)}
-                className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-all cursor-pointer ${
-                  brands.includes(b)
-                    ? "bg-[#ff9900] border-[#ff9900]"
-                    : "border-gray-300 group-hover:border-[#ff9900]"
-                }`}
-              >
-                {brands.includes(b) && <Check size={10} className="text-black" />}
-              </div>
-              <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">{b}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* Price */}
-      <div>
-        <p className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-3">Precio máximo</p>
-        <input
-          type="range"
-          min={5000}
-          max={10000000}
-          step={10000}
-          value={maxPrice}
-          onChange={(e) => setMaxPrice(Number(e.target.value))}
-          className="w-full accent-[#ff9900]"
-        />
-        <p className="text-sm font-bold text-gray-700 mt-1">${maxPrice.toLocaleString("es-CO")}</p>
-      </div>
-
-      {/* In stock */}
-      <label className="flex items-center gap-3 cursor-pointer">
-        <div
-          onClick={() => setInStockOnly(!inStockOnly)}
-          className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 transition-all cursor-pointer ${
-            inStockOnly ? "bg-[#ff9900] border-[#ff9900]" : "border-gray-300 hover:border-[#ff9900]"
-          }`}
-        >
-          {inStockOnly && <Check size={12} className="text-black" />}
-        </div>
-        <span className="text-sm font-semibold text-gray-700">Solo disponibles</span>
-      </label>
-    </aside>
+    </>
   );
 }
 
-/* ── Main page content ────────────────────────────────────────────────── */
+// ── Pagination ───────────────────────────────────────────────────────────────
+
+function Pagination({ page, total, perPage, onChange }: {
+  page: number; total: number; perPage: number; onChange: (p: number) => void;
+}) {
+  const totalPages = Math.ceil(total / perPage);
+  if (totalPages <= 1) return null;
+
+  type PE = number | "...";
+  let pages: PE[];
+  if (totalPages <= 7) pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+  else if (page <= 4)  pages = [1, 2, 3, 4, 5, "...", totalPages];
+  else if (page >= totalPages - 3) pages = [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+  else pages = [1, "...", page - 1, page, page + 1, "...", totalPages];
+
+  return (
+    <div className="flex items-center justify-center gap-1">
+      <button onClick={() => onChange(page - 1)} disabled={page === 1}
+        className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${
+          page === 1 ? "text-gray-200 cursor-not-allowed" : "text-[#6e6e73] hover:bg-white hover:shadow-sm"
+        }`}>
+        <ChevronLeft size={16} />
+      </button>
+      {pages.map((p, i) =>
+        p === "..." ? (
+          <span key={`e${i}`}
+            className="w-9 h-9 flex items-center justify-center text-gray-300 text-sm select-none">···</span>
+        ) : (
+          <button key={p} onClick={() => onChange(p as number)}
+            className={`w-9 h-9 flex items-center justify-center rounded-xl text-sm
+              font-semibold transition-all ${
+                p === page
+                  ? "bg-[#ff9900] text-black shadow-[0_2px_10px_rgba(255,153,0,0.35)]"
+                  : "text-[#6e6e73] hover:bg-white hover:shadow-sm"
+              }`}>
+            {p}
+          </button>
+        )
+      )}
+      <button onClick={() => onChange(page + 1)} disabled={page === totalPages}
+        className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${
+          page === totalPages ? "text-gray-200 cursor-not-allowed" : "text-[#6e6e73] hover:bg-white hover:shadow-sm"
+        }`}>
+        <ChevronRight size={16} />
+      </button>
+    </div>
+  );
+}
+
+// ── ProductsContent ──────────────────────────────────────────────────────────
+
 function ProductsContent() {
   const searchParams = useSearchParams();
 
   const initialCategory = searchParams.get("category") ?? "all";
   const initialQ        = searchParams.get("q") ?? "";
 
-  const [category, setCategory]     = useState(initialCategory);
-  const [brands, setBrands]         = useState<string[]>([]);
-  const [maxPrice, setMaxPrice]     = useState(1000000);
-  const [sort, setSort]             = useState("relevance");
+  const [category, setCategory]       = useState(initialCategory);
+  const [brands, setBrands]           = useState<string[]>([]);
+  const [maxPrice, setMaxPrice]       = useState(1000000);
+  const [sort, setSort]               = useState("relevance");
   const [inStockOnly, setInStockOnly] = useState(false);
-  const [mobileFilters, setMobileFilters] = useState(false);
-  const [searchQ]                   = useState(initialQ);
+  const [selWidths, setSelWidths]     = useState<string[]>([]);
+  const [selProfiles, setSelProfiles] = useState<string[]>([]);
+  const [selRims, setSelRims]         = useState<string[]>([]);
+  const [page, setPage]               = useState(1);
+  const [filterSheet, setFilterSheet] = useState(false);
+  const [sortSheet, setSortSheet]     = useState(false);
 
-  const filtered = useMemo(() => {
-    let list = ALL_PRODUCTS;
+  const searchQ  = initialQ;
+  const showVideo = true;
+
+  const filtered = useMemo<Product[]>(() => {
+    let list = [...ALL_PRODUCTS];
     if (category !== "all") list = list.filter((p) => p.category === category);
-    if (brands.length > 0) list = list.filter((p) => brands.includes(p.brand));
+    if (brands.length > 0)  list = list.filter((p) => brands.includes(p.brand));
     list = list.filter((p) => p.price <= maxPrice);
     if (inStockOnly) list = list.filter((p) => p.inStock);
     if (searchQ.trim()) {
@@ -245,118 +556,251 @@ function ProductsContent() {
         p.name.toLowerCase().includes(q) ||
         p.brand.toLowerCase().includes(q) ||
         p.tags.some((t) => t.toLowerCase().includes(q)) ||
-        p.shortDesc.toLowerCase().includes(q) ||
         p.specs.some((s) => s.toLowerCase().includes(q))
       );
     }
-
-    if (sort === "price-asc")  list = [...list].sort((a, b) => a.price - b.price);
-    if (sort === "price-desc") list = [...list].sort((a, b) => b.price - a.price);
-    if (sort === "rating")     list = [...list].sort((a, b) => b.rating - a.rating);
-
+    // Tire dimension filters
+    if (selWidths.length > 0)   list = list.filter((p) => selWidths.some((w) => p.specs.some((s) => s.startsWith(w + "/"))));
+    if (selProfiles.length > 0) list = list.filter((p) => selProfiles.some((pr) => p.specs.some((s) => s.includes("/" + pr + " R"))));
+    if (selRims.length > 0)     list = list.filter((p) => selRims.some((r) => p.specs.some((s) => s.includes("R" + r.replace('"', "")))));
+    if (sort === "price-asc")  list.sort((a, b) => a.price - b.price);
+    if (sort === "price-desc") list.sort((a, b) => b.price - a.price);
+    if (sort === "rating")     list.sort((a, b) => b.rating - a.rating);
     return list;
-  }, [category, brands, maxPrice, sort, inStockOnly, searchQ]);
+  }, [category, brands, maxPrice, sort, inStockOnly, searchQ, selWidths, selProfiles, selRims]);
+
+  const totalPages = Math.ceil(filtered.length / PER_PAGE);
+  const safePage   = Math.min(Math.max(page, 1), Math.max(totalPages, 1));
+  const paginated  = filtered.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE);
+
+  function goPage(p: number) { setPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); }
+
+  function setFC(c: string) { setCategory(c); setPage(1); }
+  function setFB(b: string[]) { setBrands(b); setPage(1); }
+  function setFP(p: number) { setMaxPrice(p); setPage(1); }
+  function setFS(v: boolean) { setInStockOnly(v); setPage(1); }
+  function setFW(v: string[]) { setSelWidths(v); setPage(1); }
+  function setFPr(v: string[]) { setSelProfiles(v); setPage(1); }
+  function setFR(v: string[]) { setSelRims(v); setPage(1); }
+
+  function clearFilters() {
+    setCategory("all"); setBrands([]); setMaxPrice(1000000); setInStockOnly(false);
+    setSelWidths([]); setSelProfiles([]); setSelRims([]); setPage(1);
+  }
+
+  const dimCount = selWidths.length + selProfiles.length + selRims.length;
+  const activeFilterCount =
+    (category !== "all" ? 1 : 0) + brands.length + (inStockOnly ? 1 : 0) + dimCount;
+
+  const pageTitle = searchQ.trim()
+    ? `Resultados para "${searchQ}"`
+    : category !== "all"
+    ? CATEGORY_LABELS[category as ProductCategory]
+    : "Todos los productos";
+
+  const filterProps = {
+    category, setCategory: setFC,
+    brands, setBrands: setFB,
+    maxPrice, setMaxPrice: setFP,
+    inStockOnly, setInStockOnly: setFS,
+    selWidths, setSelWidths: setFW,
+    selProfiles, setSelProfiles: setFPr,
+    selRims, setSelRims: setFR,
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#f2f2f7]">
       <Navbar />
 
       <main className="pt-[96px]">
 
-        {/* Breadcrumb */}
-        <div className="bg-white border-b border-gray-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-2 text-sm text-gray-400">
-            <Link href="/" className="flex items-center gap-1.5 hover:text-[#ff9900] transition-colors font-medium">
-              <ArrowLeft size={14} />
-              Inicio
-            </Link>
-            <span>/</span>
-            <span className="text-gray-700 font-semibold">
-              {category !== "all" ? CATEGORY_LABELS[category as ProductCategory] : "Todos los productos"}
-            </span>
-          </div>
-        </div>
+        {/* ── Hero banner ─────────────────────────────────────────── */}
+        <div className="relative overflow-hidden"
+          style={{ background: showVideo ? "#1a0800" : "linear-gradient(145deg, #c44000 0%, #e86000 30%, #ff8800 60%, #ffaa22 100%)" }}>
 
-        {/* Promo banner */}
-        <div className="relative h-30 sm:h-52 overflow-hidden">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="https://www.continental.com/fileadmin/__imported/sites/corporate/_international/english/hubpages/60_20company/40_20history/20_20anniversary/05-anniversary_20publication/chapters/chapter_7/cw36-150y-histannivpub7-advert-canvasframe-web-16to9.jpg"
-            alt=""
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-black/40" />
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Top bar */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <div>
-              <h1 className="text-2xl font-black text-gray-900 tracking-tight">
-                {searchQ.trim()
-                  ? `Resultados para "${searchQ}"`
-                  : category !== "all"
-                  ? CATEGORY_LABELS[category as ProductCategory]
-                  : "Todos los productos"}
-              </h1>
-              <p className="text-gray-400 text-sm mt-0.5">{filtered.length} productos encontrados</p>
-            </div>
-            <div className="flex items-center gap-3">
-              {/* Mobile filter toggle */}
-              <button
-                onClick={() => setMobileFilters(true)}
-                className="lg:hidden flex items-center gap-2 px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:border-[#ff9900] hover:text-[#ff9900] transition-all"
-              >
-                <SlidersHorizontal size={15} />
-                Filtros
-                {(brands.length > 0 || inStockOnly) && (
-                  <span className="bg-[#ff9900] text-black text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center">
-                    {brands.length + (inStockOnly ? 1 : 0)}
-                  </span>
-                )}
-              </button>
-
-              {/* Sort */}
-              <div className="relative">
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value)}
-                  className="appearance-none pl-4 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 font-semibold focus:outline-none focus:border-[#ff9900] bg-white hover:border-[#ff9900]/40 transition-colors"
-                >
-                  {SORT_OPTIONS.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
-                </select>
-                <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-8">
-            {/* Desktop sidebar */}
-            <div className="hidden lg:block w-52 flex-shrink-0">
-              <FilterSidebar
-                category={category} setCategory={setCategory}
-                brands={brands} setBrands={setBrands}
-                maxPrice={maxPrice} setMaxPrice={setMaxPrice}
-                inStockOnly={inStockOnly} setInStockOnly={setInStockOnly}
+          {/* Video background — only when browsing all products */}
+          {showVideo && (
+            <>
+              <video
+                key="hero-video"
+                src={HERO_VIDEO}
+                autoPlay muted loop playsInline
+                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                style={{ opacity: 0.55 }}
               />
-            </div>
+              {/* Orange brand overlay */}
+              <div className="absolute inset-0 pointer-events-none"
+                style={{ background: "linear-gradient(145deg, rgba(180,48,0,0.80) 0%, rgba(220,80,0,0.72) 35%, rgba(255,120,0,0.65) 65%, rgba(255,160,30,0.60) 100%)" }} />
+            </>
+          )}
 
-            {/* Grid */}
+          {/* Specular highlight — top left */}
+          {!showVideo && (
+            <div className="absolute -top-16 -left-16 w-80 h-80 rounded-full pointer-events-none"
+              style={{ background: "radial-gradient(circle, rgba(255,255,255,0.18) 0%, transparent 65%)" }} />
+          )}
+          {/* Depth shadow — bottom right */}
+          <div className="absolute bottom-0 right-0 w-96 h-64 pointer-events-none"
+            style={{ background: "radial-gradient(ellipse at 80% 100%, rgba(0,0,0,0.20) 0%, transparent 60%)" }} />
+          {/* Subtle tread-line texture */}
+          <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
+            style={{
+              backgroundImage: "repeating-linear-gradient(0deg, #000 0px, #000 1px, transparent 1px, transparent 24px)",
+            }} />
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative">
+            <div className="flex items-center justify-between gap-8">
+
+              {/* Left */}
+              <div className="flex-1 min-w-0">
+                {/* Breadcrumb */}
+                <div className="flex items-center gap-2 text-sm text-white/50 mb-5">
+                  <Link href="/"
+                    className="flex items-center gap-1.5 hover:text-white transition-colors font-medium">
+                    <ArrowLeft size={13} />
+                    Inicio
+                  </Link>
+                  <span className="text-white/25">/</span>
+                  <span className="text-white/80 font-medium">Productos</span>
+                  {category !== "all" && (
+                    <>
+                      <span className="text-white/25">/</span>
+                      <span className="text-white font-semibold">
+                        {CATEGORY_LABELS[category as ProductCategory]}
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                {/* "Buscaste por" pills */}
+                {(searchQ.trim() || category !== "all") && (
+                  <div className="flex items-center gap-2 flex-wrap mb-3">
+                    <span className="text-white/50 text-[11px] font-medium flex-shrink-0">Buscaste por:</span>
+                    {searchQ.trim() && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full
+                        bg-white/25 border border-white/40 text-white text-[11px] font-semibold
+                        backdrop-blur-sm">
+                        {searchQ}
+                      </span>
+                    )}
+                    {category !== "all" && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full
+                        bg-black/15 border border-black/10 text-white text-[11px] font-semibold">
+                        {CATEGORY_LABELS[category as ProductCategory]}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Title */}
+                <h1 className="text-white font-semibold text-3xl sm:text-4xl tracking-tight leading-tight mb-2">
+                  {pageTitle}
+                </h1>
+
+                {/* Count */}
+                <p className="text-white/60 text-sm">
+                  <span className="text-white font-semibold">{filtered.length}</span> productos
+                  {totalPages > 1 && (
+                    <span className="text-white/30"> · página {safePage} de {totalPages}</span>
+                  )}
+                </p>
+
+                {/* Desktop sort + clear */}
+                <div className="hidden sm:flex items-center gap-3 mt-5">
+                  {activeFilterCount > 0 && (
+                    <button onClick={clearFilters}
+                      className="text-[11px] text-white/70 font-medium hover:text-white transition-colors
+                        flex items-center gap-1">
+                      <X size={11} />
+                      Limpiar filtros ({activeFilterCount})
+                    </button>
+                  )}
+                  <div className="relative">
+                    <select value={sort}
+                      onChange={(e) => { setSort(e.target.value); setPage(1); }}
+                      className="appearance-none pl-4 pr-8 py-2
+                        bg-black/20 border border-black/15 rounded-xl
+                        text-sm text-white font-medium cursor-pointer
+                        focus:outline-none focus:border-white/30
+                        hover:bg-black/25 transition-colors backdrop-blur-sm">
+                      {SORT_OPTIONS.map((o) => (
+                        <option key={o.id} value={o.id} style={{ background: "#8b3a00" }}>{o.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={13}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-white/60" />
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* Fade into page background */}
+          <div className="h-8 bg-gradient-to-b from-transparent to-[#f2f2f7]" />
+        </div>
+
+        {/* ── Main content ────────────────────────────────────────── */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7 pb-32 sm:pb-12">
+          <div className="flex gap-7">
+
+            {/* ── Desktop filter sidebar (floating) ──────────────── */}
+            <aside className="hidden lg:block w-56 flex-shrink-0">
+              <div className="sticky top-[112px] px-1 pb-6">
+                <div className="bg-white/80 backdrop-blur-2xl border border-white/95 rounded-2xl
+                  shadow-[0_4px_24px_rgba(0,0,0,0.07),0_1px_4px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)]">
+
+                  {/* Sidebar header */}
+                  <div className="flex items-center justify-between px-5 pt-4 pb-3
+                    border-b border-gray-100/70">
+                    <span className="font-semibold text-[#1d1d1f] text-sm">Filtros</span>
+                    {activeFilterCount > 0 && (
+                      <button onClick={clearFilters}
+                        className="text-[10px] text-[#ff9900] font-semibold hover:text-[#e68a00]
+                          transition-colors flex items-center gap-0.5">
+                        <X size={10} />
+                        Limpiar ({activeFilterCount})
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Scrollable body */}
+                  <div className="overflow-y-auto no-scrollbar px-5 py-4"
+                    style={{ maxHeight: "calc(100vh - 200px)" }}>
+                    <FilterControls {...filterProps} />
+                  </div>
+                </div>
+              </div>
+            </aside>
+
+            {/* ── Product list ───────────────────────────────────── */}
             <div className="flex-1 min-w-0">
-              {filtered.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-24 text-center">
-                  <p className="text-gray-400 text-lg font-semibold mb-2">Sin resultados</p>
-                  <p className="text-gray-300 text-sm mb-5">Prueba ajustando los filtros.</p>
-                  <button
-                    onClick={() => { setCategory("all"); setBrands([]); setMaxPrice(1000000); setInStockOnly(false); }}
-                    className="px-5 py-2.5 bg-[#ff9900] text-black font-bold rounded-xl text-sm"
-                  >
+              {paginated.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-28 text-center">
+                  <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center
+                    shadow-[0_2px_12px_rgba(0,0,0,0.06)] mb-5">
+                    <SlidersHorizontal size={22} className="text-gray-300" />
+                  </div>
+                  <p className="text-[#1d1d1f] font-semibold mb-1.5">Sin resultados</p>
+                  <p className="text-[#6e6e73] text-sm mb-6">Prueba ajustando los filtros.</p>
+                  <button onClick={clearFilters}
+                    className="px-6 py-2.5 bg-[#ff9900] text-black font-semibold rounded-xl
+                      text-sm shadow-[0_2px_12px_rgba(255,153,0,0.3)] hover:bg-[#e68a00] transition-colors">
                     Limpiar filtros
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                  {filtered.map((p) => <ProductCard key={p.id} product={p} />)}
+                <div className="space-y-3.5">
+                  {paginated.map((p) => <ProductCard key={p.id} product={p} />)}
+                </div>
+              )}
+
+              {totalPages > 1 && paginated.length > 0 && (
+                <div className="mt-10 pt-8 border-t border-gray-200/60">
+                  <Pagination page={safePage} total={filtered.length} perPage={PER_PAGE} onChange={goPage} />
+                  <p className="text-center text-[11px] text-gray-300 mt-3">
+                    {((safePage - 1) * PER_PAGE) + 1}–{Math.min(safePage * PER_PAGE, filtered.length)} de {filtered.length} productos
+                  </p>
                 </div>
               )}
             </div>
@@ -364,37 +808,87 @@ function ProductsContent() {
         </div>
       </main>
 
-      <Footer />
+      <div className="pb-16 lg:pb-0">
+        <Footer />
+      </div>
 
-      {/* Mobile filter overlay */}
-      {mobileFilters && (
-        <div className="fixed inset-0 z-[60] flex lg:hidden">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setMobileFilters(false)} />
-          <div className="relative ml-auto w-72 bg-white h-full shadow-2xl overflow-y-auto p-6">
-            <div className="flex items-center justify-between mb-6">
-              <span className="font-black text-gray-900">Filtros</span>
-              <button onClick={() => setMobileFilters(false)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-50 text-gray-500">
-                <X size={18} />
-              </button>
-            </div>
-            <FilterSidebar
-              category={category} setCategory={setCategory}
-              brands={brands} setBrands={setBrands}
-              maxPrice={maxPrice} setMaxPrice={setMaxPrice}
-              inStockOnly={inStockOnly} setInStockOnly={setInStockOnly}
-            />
-            <button
-              onClick={() => setMobileFilters(false)}
-              className="mt-6 w-full py-3 bg-[#ff9900] text-black font-bold rounded-xl"
-            >
-              Ver {filtered.length} productos
+      <WhatsAppButton />
+
+      {/* ── Mobile floating bottom bar ──────────────────────────── */}
+      <div className="fixed bottom-0 inset-x-0 z-50 lg:hidden">
+        <div className="mx-3 mb-3 rounded-2xl overflow-hidden
+          bg-white/92 backdrop-blur-3xl
+          border border-white/80
+          shadow-[0_4px_24px_rgba(0,0,0,0.14),0_1px_4px_rgba(0,0,0,0.08)]">
+          <div className="flex items-stretch h-[54px] divide-x divide-gray-100/80">
+            <button onClick={() => setFilterSheet(true)}
+              className="flex-1 flex items-center justify-center gap-2
+                text-[13px] font-semibold text-[#1d1d1f]
+                hover:bg-gray-50/60 active:bg-gray-100 transition-colors rounded-l-2xl">
+              <SlidersHorizontal size={15} className="text-[#6e6e73]" />
+              Filtrar
+              {activeFilterCount > 0 && (
+                <span className="bg-[#ff9900] text-black text-[9px] font-bold
+                  rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+            <button onClick={() => setSortSheet(true)}
+              className="flex-1 flex items-center justify-center gap-2
+                text-[13px] font-semibold text-[#1d1d1f]
+                hover:bg-gray-50/60 active:bg-gray-100 transition-colors rounded-r-2xl">
+              <ArrowUpDown size={14} className="text-[#6e6e73]" />
+              Ordenar
+              {sort !== "relevance" && (
+                <div className="w-1.5 h-1.5 rounded-full bg-[#ff9900]" />
+              )}
             </button>
           </div>
         </div>
-      )}
+        <div style={{ height: "env(safe-area-inset-bottom, 0px)" }} />
+      </div>
+
+      {/* Filter sheet */}
+      <BottomSheet open={filterSheet} onClose={() => setFilterSheet(false)} title="Filtros">
+        <FilterControls {...filterProps} />
+        <div className="mt-6 space-y-2.5">
+          <button onClick={() => setFilterSheet(false)}
+            className="w-full py-3.5 bg-[#ff9900] text-black font-semibold rounded-xl text-sm
+              shadow-[0_2px_12px_rgba(255,153,0,0.3)] hover:bg-[#e68a00] transition-colors">
+            Ver {filtered.length} producto{filtered.length !== 1 ? "s" : ""}
+          </button>
+          {activeFilterCount > 0 && (
+            <button onClick={() => { clearFilters(); setFilterSheet(false); }}
+              className="w-full py-3 text-[#6e6e73] text-sm font-medium hover:text-[#1d1d1f] transition-colors">
+              Limpiar filtros
+            </button>
+          )}
+        </div>
+      </BottomSheet>
+
+      {/* Sort sheet */}
+      <BottomSheet open={sortSheet} onClose={() => setSortSheet(false)} title="Ordenar por">
+        <div className="space-y-1">
+          {SORT_OPTIONS.map((o) => (
+            <button key={o.id} onClick={() => { setSort(o.id); setSortSheet(false); setPage(1); }}
+              className={`w-full text-left flex items-center justify-between
+                px-4 py-3.5 rounded-xl text-sm transition-colors ${
+                  sort === o.id
+                    ? "bg-[#ff9900]/10 text-[#ff9900] font-semibold"
+                    : "text-[#1d1d1f] font-medium hover:bg-gray-50"
+                }`}>
+              <span>{o.label}</span>
+              {sort === o.id && <Check size={14} className="text-[#ff9900]" />}
+            </button>
+          ))}
+        </div>
+      </BottomSheet>
     </div>
   );
 }
+
+// ── Page export ──────────────────────────────────────────────────────────────
 
 export default function ProductsPage() {
   return (
