@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { hostname: "encrypted-tbn0.gstatic.com" },
       { hostname: "www.merquellantas.com" },
+      { hostname: "scontent2.llantas.mx" },
+      { hostname: "www.alkosto.com" },
+      { hostname: "www.wheelcompany.com.co" },
+      { hostname: "media.istockphoto.com" },
     ],
   },
 };

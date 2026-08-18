@@ -31,8 +31,8 @@ function YoutubeIcon({ size = 16 }: { size?: number }) {
 }
 
 const FOOTER_LINKS: Record<string, string[]> = {
-  "Productos": ["Llantas", "Lubricantes", "Baterías", "Rines", "Accesorios", "Servicios"],
-  "Marcas":    ["Michelin", "Continental", "Bridgestone", "Pirelli", "Bosch", "Mobil"],
+  "Productos": ["Llantas", "Lubricantes", "Baterías", "Rines", "Servicios"],
+  "Marcas":    ["Continental", "Hankook", "Nexen", "Mobil", "Total", "Rubia", "Willard", "Alcoa"],
   "Ayuda":     ["Centro de ayuda", "Mi pedido", "Devoluciones", "Garantías", "Instalación", "Financiamiento"],
   "Empresa":   ["Sobre nosotros", "Trabaja con nosotros", "Prensa", "Terminos de uso", "Privacidad", "Cookies", "Plataforma"],
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, Suspense } from "react";
+import { useState, useMemo, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -11,7 +11,7 @@ import {
   ALL_PRODUCTS, CATEGORY_LABELS,
   type Product, type ProductCategory,
 } from "../lib/products";
-import { TIRE_WIDTHS, TIRE_PROFILES, RIM_SIZES } from "../lib/mockData";
+import { TIRE_WIDTHS, TIRE_PROFILES, RIM_SIZES, BRANDS } from "../lib/mockData";
 import { useCart } from "../context/CartContext";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -29,17 +29,20 @@ const SORT_OPTIONS = [
   { id: "rating",     label: "Mejor valorados" },
 ];
 
-const HERO_VIDEO =
-  "https://res.cloudinary.com/dbomhbkop/video/upload/q_auto/f_auto/v1777913275/Continental_Tire_The_Smart_Choice_In_Tires._-_Continental_Tire_1080p_h264_cezari.mp4";
+const BRAND_CATEGORY_MAP: Record<string, string[]> = {
+  llantas:     ["Continental", "Hankook", "Aplus", "CargoPower", "Tab", "Nexen"],
+  lubricantes: ["Rubia", "Total", "Mobil"],
+  baterias:    ["Willard"],
+  rines:       ["Alcoa"],
+};
 
 const ALKOSTO_IDS = new Set([
-  "michelin-primacy4-20555r16",
   "continental-sportcontact7-22545r17",
-  "bridgestone-dueler-at-26570r16",
-  "pirelli-pzero-25540r18",
-  "michelin-pilot-sport4-23535r19",
-  "bosch-s4-60ah",
-  "bosch-s5-72ah",
+  "continental-crosscontact-23560r18",
+  "hankook-ventus-s1evo3-22545r17",
+  "mobil1-5w30-4l",
+  "willard-600-60ah",
+  "willard-800-72ah",
 ]);
 
 const ALKOSTO_LOGO = "https://upload.wikimedia.org/wikipedia/commons/9/9a/Alkosto_HiperAhorro.png";
@@ -541,8 +544,15 @@ function ProductsContent() {
   const [filterSheet, setFilterSheet] = useState(false);
   const [sortSheet, setSortSheet]     = useState(false);
 
-  const searchQ  = initialQ;
-  const showVideo = true;
+  const searchQ = initialQ;
+  const brandsScrollRef = useRef<HTMLDivElement>(null);
+
+  const visibleBrands = useMemo(() => {
+    if (category === "all") return BRANDS;
+    const allowed = new Set(BRAND_CATEGORY_MAP[category] ?? []);
+    if (allowed.size === 0) return BRANDS;
+    return BRANDS.filter((b) => allowed.has(b.name));
+  }, [category]);
 
   const filtered = useMemo<Product[]>(() => {
     let list = [...ALL_PRODUCTS];
@@ -615,129 +625,192 @@ function ProductsContent() {
       <main className="pt-[96px]">
 
         {/* ── Hero banner ─────────────────────────────────────────── */}
-        <div className="relative overflow-hidden"
-          style={{ background: showVideo ? "#1a0800" : "linear-gradient(145deg, #c44000 0%, #e86000 30%, #ff8800 60%, #ffaa22 100%)" }}>
-
-          {/* Video background — only when browsing all products */}
-          {showVideo && (
-            <>
-              <video
-                key="hero-video"
-                src={HERO_VIDEO}
-                autoPlay muted loop playsInline
-                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                style={{ opacity: 0.55 }}
-              />
-              {/* Orange brand overlay */}
-              <div className="absolute inset-0 pointer-events-none"
-                style={{ background: "linear-gradient(145deg, rgba(180,48,0,0.80) 0%, rgba(220,80,0,0.72) 35%, rgba(255,120,0,0.65) 65%, rgba(255,160,30,0.60) 100%)" }} />
-            </>
-          )}
-
-          {/* Specular highlight — top left */}
-          {!showVideo && (
-            <div className="absolute -top-16 -left-16 w-80 h-80 rounded-full pointer-events-none"
-              style={{ background: "radial-gradient(circle, rgba(255,255,255,0.18) 0%, transparent 65%)" }} />
-          )}
-          {/* Depth shadow — bottom right */}
-          <div className="absolute bottom-0 right-0 w-96 h-64 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse at 80% 100%, rgba(0,0,0,0.20) 0%, transparent 60%)" }} />
+        <div
+          className="relative overflow-hidden"
+          style={{ background: "linear-gradient(135deg, #1a0500 0%, #7a2e00 100%)" }}
+        >
           {/* Subtle tread-line texture */}
           <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
-            style={{
-              backgroundImage: "repeating-linear-gradient(0deg, #000 0px, #000 1px, transparent 1px, transparent 24px)",
-            }} />
+            style={{ backgroundImage: "repeating-linear-gradient(0deg, #000 0px, #000 1px, transparent 1px, transparent 24px)" }} />
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative">
-            <div className="flex items-center justify-between gap-8">
+          {/* Merquito — absolute right */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/merquito.png"
+            alt="Merquito"
+            className="hidden md:block absolute right-0 bottom-0 h-52 lg:h-64 w-auto object-contain pointer-events-none"
+            style={{ mixBlendMode: "screen" }}
+          />
 
-              {/* Left */}
-              <div className="flex-1 min-w-0">
-                {/* Breadcrumb */}
-                <div className="flex items-center gap-2 text-sm text-white/50 mb-5">
-                  <Link href="/"
-                    className="flex items-center gap-1.5 hover:text-white transition-colors font-medium">
-                    <ArrowLeft size={13} />
-                    Inicio
-                  </Link>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-2 text-sm text-white/50 mb-6 justify-center">
+              <Link href="/"
+                className="flex items-center gap-1.5 hover:text-white transition-colors font-medium">
+                <ArrowLeft size={13} />
+                Inicio
+              </Link>
+              <span className="text-white/25">/</span>
+              <span className="text-white/80 font-medium">Productos</span>
+              {category !== "all" && (
+                <>
                   <span className="text-white/25">/</span>
-                  <span className="text-white/80 font-medium">Productos</span>
-                  {category !== "all" && (
-                    <>
-                      <span className="text-white/25">/</span>
-                      <span className="text-white font-semibold">
-                        {CATEGORY_LABELS[category as ProductCategory]}
-                      </span>
-                    </>
-                  )}
-                </div>
+                  <span className="text-white font-semibold">
+                    {CATEGORY_LABELS[category as ProductCategory]}
+                  </span>
+                </>
+              )}
+            </div>
 
-                {/* "Buscaste por" pills */}
-                {(searchQ.trim() || category !== "all") && (
-                  <div className="flex items-center gap-2 flex-wrap mb-3">
-                    <span className="text-white/50 text-[11px] font-medium flex-shrink-0">Buscaste por:</span>
-                    {searchQ.trim() && (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full
-                        bg-white/25 border border-white/40 text-white text-[11px] font-semibold
-                        backdrop-blur-sm">
-                        {searchQ}
-                      </span>
-                    )}
-                    {category !== "all" && (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full
-                        bg-black/15 border border-black/10 text-white text-[11px] font-semibold">
-                        {CATEGORY_LABELS[category as ProductCategory]}
-                      </span>
-                    )}
-                  </div>
+            {/* "Buscaste por" pills */}
+            {(searchQ.trim() || category !== "all") && (
+              <div className="flex items-center justify-center gap-2 flex-wrap mb-4">
+                <span className="text-white/50 text-[11px] font-medium flex-shrink-0">Buscaste por:</span>
+                {searchQ.trim() && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full
+                    bg-white/25 border border-white/40 text-white text-[11px] font-semibold backdrop-blur-sm">
+                    {searchQ}
+                  </span>
                 )}
-
-                {/* Title */}
-                <h1 className="text-white font-semibold text-3xl sm:text-4xl tracking-tight leading-tight mb-2">
-                  {pageTitle}
-                </h1>
-
-                {/* Count */}
-                <p className="text-white/60 text-sm">
-                  <span className="text-white font-semibold">{filtered.length}</span> productos
-                  {totalPages > 1 && (
-                    <span className="text-white/30"> · página {safePage} de {totalPages}</span>
-                  )}
-                </p>
-
-                {/* Desktop sort + clear */}
-                <div className="hidden sm:flex items-center gap-3 mt-5">
-                  {activeFilterCount > 0 && (
-                    <button onClick={clearFilters}
-                      className="text-[11px] text-white/70 font-medium hover:text-white transition-colors
-                        flex items-center gap-1">
-                      <X size={11} />
-                      Limpiar filtros ({activeFilterCount})
-                    </button>
-                  )}
-                  <div className="relative">
-                    <select value={sort}
-                      onChange={(e) => { setSort(e.target.value); setPage(1); }}
-                      className="appearance-none pl-4 pr-8 py-2
-                        bg-black/20 border border-black/15 rounded-xl
-                        text-sm text-white font-medium cursor-pointer
-                        focus:outline-none focus:border-white/30
-                        hover:bg-black/25 transition-colors backdrop-blur-sm">
-                      {SORT_OPTIONS.map((o) => (
-                        <option key={o.id} value={o.id} style={{ background: "#8b3a00" }}>{o.label}</option>
-                      ))}
-                    </select>
-                    <ChevronDown size={13}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-white/60" />
-                  </div>
-                </div>
+                {category !== "all" && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full
+                    bg-black/15 border border-black/10 text-white text-[11px] font-semibold">
+                    {CATEGORY_LABELS[category as ProductCategory]}
+                  </span>
+                )}
               </div>
+            )}
 
+            {/* Title — centered, big */}
+            <h1
+              className="text-white font-black tracking-tight leading-none text-center mb-3"
+              style={{ fontSize: "clamp(2.25rem, 5vw, 4rem)" }}
+            >
+              {pageTitle}
+            </h1>
+
+            {/* Count */}
+            <p className="text-white/55 text-sm text-center mb-6">
+              <span className="text-white font-semibold">{filtered.length}</span> productos
+              {totalPages > 1 && (
+                <span className="text-white/30"> · página {safePage} de {totalPages}</span>
+              )}
+            </p>
+
+            {/* Sort + clear — centered */}
+            <div className="flex items-center justify-center gap-3">
+              {activeFilterCount > 0 && (
+                <button onClick={clearFilters}
+                  className="text-[11px] text-white/70 font-medium hover:text-white transition-colors flex items-center gap-1">
+                  <X size={11} />
+                  Limpiar filtros ({activeFilterCount})
+                </button>
+              )}
+              <div className="relative">
+                <select value={sort}
+                  onChange={(e) => { setSort(e.target.value); setPage(1); }}
+                  className="appearance-none pl-4 pr-8 py-2 bg-black/20 border border-black/15 rounded-xl
+                    text-sm text-white font-medium cursor-pointer focus:outline-none focus:border-white/30
+                    hover:bg-black/25 transition-colors backdrop-blur-sm">
+                  {SORT_OPTIONS.map((o) => (
+                    <option key={o.id} value={o.id} style={{ background: "#5a1500" }}>{o.label}</option>
+                  ))}
+                </select>
+                <ChevronDown size={13}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-white/60" />
+              </div>
             </div>
           </div>
 
           {/* Fade into page background */}
           <div className="h-8 bg-gradient-to-b from-transparent to-[#f2f2f7]" />
+        </div>
+
+        {/* ── Brands carousel ─────────────────────────────────────────── */}
+        <div className="bg-white border-b border-gray-100 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="relative flex items-center gap-2 py-4">
+              {/* Left arrow */}
+              <button
+                onClick={() => brandsScrollRef.current?.scrollBy({ left: -240, behavior: "smooth" })}
+                className="flex-shrink-0 w-8 h-8 rounded-full border border-gray-200 bg-white flex items-center
+                  justify-center text-gray-400 hover:text-[#ff9900] hover:border-[#ff9900]/40 transition-all shadow-sm z-10"
+                aria-label="Anterior"
+              >
+                <ChevronLeft size={15} />
+              </button>
+
+              {/* Scrollable brand chips */}
+              <div
+                ref={brandsScrollRef}
+                className="flex gap-3 overflow-x-auto flex-1"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              >
+                {/* "Todos" chip */}
+                <button
+                  onClick={() => setFB([])}
+                  className={`flex-none px-4 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                    brands.length === 0
+                      ? "bg-[#ff9900] text-black border-[#ff9900] shadow-[0_2px_8px_rgba(255,153,0,0.3)]"
+                      : "bg-gray-50 text-gray-500 border-gray-200 hover:border-[#ff9900]/40 hover:text-[#ff9900]"
+                  }`}
+                >
+                  Todos
+                </button>
+
+                {visibleBrands.map((brand) => {
+                  const active = brands.includes(brand.name);
+                  return (
+                    <button
+                      key={brand.name}
+                      onClick={() => setFB(
+                        active
+                          ? brands.filter((x) => x !== brand.name)
+                          : [...brands, brand.name]
+                      )}
+                      className={`flex-none flex flex-col items-center gap-1.5 px-4 py-2 rounded-2xl border
+                        transition-all duration-200 ${
+                        active
+                          ? "bg-[#ff9900]/10 border-[#ff9900]/50 shadow-[0_0_0_2px_rgba(255,153,0,0.2)]"
+                          : "bg-gray-50 border-gray-200 hover:border-[#ff9900]/30 hover:bg-white hover:shadow-sm"
+                      }`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={brand.url}
+                        alt={brand.name}
+                        className="h-6 w-20 object-contain"
+                        loading="lazy"
+                        onError={(e) => {
+                          const el = e.currentTarget as HTMLImageElement;
+                          el.style.display = "none";
+                          const span = document.createElement("span");
+                          span.textContent = brand.name;
+                          span.style.cssText = "font-size:10px;font-weight:700;color:#6e6e73;";
+                          el.parentElement?.appendChild(span);
+                        }}
+                      />
+                      <span className={`text-[10px] font-semibold leading-none transition-colors ${
+                        active ? "text-[#c47800]" : "text-gray-400"
+                      }`}>
+                        {brand.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Right arrow */}
+              <button
+                onClick={() => brandsScrollRef.current?.scrollBy({ left: 240, behavior: "smooth" })}
+                className="flex-shrink-0 w-8 h-8 rounded-full border border-gray-200 bg-white flex items-center
+                  justify-center text-gray-400 hover:text-[#ff9900] hover:border-[#ff9900]/40 transition-all shadow-sm z-10"
+                aria-label="Siguiente"
+              >
+                <ChevronRight size={15} />
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* ── Main content ────────────────────────────────────────── */}

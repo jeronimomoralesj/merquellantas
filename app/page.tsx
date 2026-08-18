@@ -15,13 +15,12 @@ export default function Home() {
     <main>
       <Navbar />
       <HeroSection />
-
       <BentoGrid />
       <FlashDeals />
       <CityStats />
       <StoreFinder />
-      <Testimonials />
       <BlogSection />
+      <Testimonials />
       <Footer />
       <WhatsAppButton />
     </main>

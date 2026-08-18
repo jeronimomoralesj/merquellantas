@@ -3,6 +3,7 @@ import { Jost } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "./context/CartContext";
 import CartDrawer from "./components/CartDrawer";
+import SignupPopup from "./components/SignupPopup";
 
 const jost = Jost({
   variable: "--font-jost",
@@ -30,6 +31,7 @@ export default function RootLayout({
         <CartProvider>
           {children}
           <CartDrawer />
+          <SignupPopup />
         </CartProvider>
       </body>
     </html>

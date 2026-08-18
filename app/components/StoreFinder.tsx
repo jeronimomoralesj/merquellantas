@@ -44,11 +44,27 @@ export default function StoreFinder() {
   return (
     <section className="bg-gray-50 py-14">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
-            Encuentra tu tienda mas cercana
-          </h2>
+
+        {/* Header with Merquito */}
+        <div className="relative mb-8 rounded-3xl overflow-hidden"
+          style={{ background: "linear-gradient(135deg, #1a0500 0%, #7a2e00 100%)" }}>
+          <div className="flex items-end justify-between gap-4 px-8 pt-8 pb-0">
+            <div className="pb-8">
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#ff9900] mb-2">
+                Red de tiendas
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                Encuentra tu tienda<br />mas cercana
+              </h2>
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/merquito.png"
+              alt="Merquito"
+              className="h-44 sm:h-52 w-auto object-contain flex-shrink-0 self-end"
+              style={{ mixBlendMode: "screen" }}
+            />
+          </div>
         </div>
 
         {/* City selector */}

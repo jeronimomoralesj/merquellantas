@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, ShoppingCart, Menu, X, ArrowRight } from "lucide-react";
+import { Search, ShoppingCart, Menu, X, ArrowRight, LogIn } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { ALL_PRODUCTS, CATEGORY_LABELS } from "../lib/products";
 
@@ -91,67 +91,105 @@ export default function Navbar() {
       </div>
 
       {/* ── Main navbar ───────────────────────────────────────── */}
-      <header
-        className={`transition-all duration-300 ${
-          scrolled
-            ? "bg-white/90 backdrop-blur-2xl shadow-[0_1px_0_rgba(0,0,0,0.06)]"
-            : "bg-white/75 backdrop-blur-xl"
-        }`}
-      >
+      <header className="bg-white shadow-[0_1px_0_rgba(0,0,0,0.07)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-[60px]">
+          <div className="flex items-center h-[60px]">
 
-            {/* Logo */}
-            <a href="/" className="flex-shrink-0 flex items-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="https://www.merquellantas.com/assets/images/logo/Logo-Merquellantas.png"
-                alt="Merquellantas"
-                className="h-8 w-auto object-contain"
-                onError={(e) => {
-                  const t = e.currentTarget;
-                  t.style.display = "none";
-                  const fallback = t.nextElementSibling as HTMLElement | null;
-                  if (fallback) fallback.style.display = "flex";
-                }}
-              />
-              <div className="hidden items-center gap-0.5">
-                <span className="font-black text-[#111] text-[17px] tracking-tight">Merque</span>
-                <span className="font-black text-[#ff9900] text-[17px] tracking-tight">llantas</span>
-              </div>
-            </a>
+            {/* Logo — left */}
+            <div className="flex-shrink-0">
+              <a href="/" className="inline-flex items-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="https://www.merquellantas.com/assets/images/logo/Logo-Merquellantas.png"
+                  alt="Merquellantas"
+                  className="h-8 w-auto object-contain"
+                  onError={(e) => {
+                    const t = e.currentTarget;
+                    t.style.display = "none";
+                    const fallback = t.nextElementSibling as HTMLElement | null;
+                    if (fallback) fallback.style.display = "flex";
+                  }}
+                />
+                <div className="hidden items-center gap-0.5">
+                  <span className="font-black text-[#111] text-[17px] tracking-tight">Merque</span>
+                  <span className="font-black text-[#ff9900] text-[17px] tracking-tight">llantas</span>
+                </div>
+              </a>
+            </div>
 
-            {/* Center nav — desktop */}
-            <nav className="hidden lg:flex items-center gap-7">
-              {NAV_LINKS.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="text-[13.5px] font-medium text-black/55 hover:text-black transition-colors duration-200"
+            {/* Pill (desktop): flex-1, nav centered, icons pinned right */}
+            <div className="hidden lg:flex flex-1 items-center h-[42px] border border-[#ff9900] rounded-[18px] ml-8 px-1">
+              {/* Nav — takes all middle space, centers links */}
+              <nav className="flex-1 flex items-center justify-center gap-6">
+                {NAV_LINKS.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    className="text-[13.5px] font-medium text-black/55 hover:text-black transition-colors duration-200 border-b-2 border-transparent hover:border-[#ff9900] pb-0.5"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
+
+              {/* Divider */}
+              <div className="w-px h-5 bg-[#ff9900]/30 mx-1 flex-shrink-0" />
+
+              {/* Icons — right end */}
+              <div className="flex items-center gap-0.5 flex-shrink-0">
+                <button
+                  onClick={() => { setSearchOpen((s) => !s); setSearchQ(""); }}
+                  className="w-9 h-9 flex items-center justify-center text-black/50 hover:text-black rounded-full transition-all hover:bg-black/[0.05]"
+                  aria-label="Buscar"
                 >
-                  {link.label}
-                </a>
-              ))}
-            </nav>
+                  <Search size={17} strokeWidth={2} />
+                </button>
+                <button
+                  aria-label="Iniciar sesión"
+                  className="w-9 h-9 flex items-center justify-center text-black/50 hover:text-black rounded-full transition-all hover:bg-black/[0.05]"
+                >
+                  <LogIn size={17} strokeWidth={2} />
+                </button>
+                <button
+                  onClick={openCart}
+                  aria-label="Carrito"
+                  className={`relative flex items-center justify-center gap-1.5 transition-all duration-200 hover:bg-black/[0.05] text-black/50 hover:text-black ${
+                    itemCount > 0 ? "rounded-full pl-3.5 pr-2.5 h-9" : "rounded-full w-9 h-9"
+                  }`}
+                >
+                  <ShoppingCart size={17} strokeWidth={2} />
+                  {itemCount > 0 && (
+                    <span className="bg-[#ff9900] text-black text-[10px] font-bold min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center leading-none">
+                      {itemCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
 
-            {/* Right cluster */}
-            <div className="flex items-center gap-0.5">
-
-              {/* Search button */}
+            {/* Mobile icons */}
+            <div className="lg:hidden flex-1 flex justify-end items-center gap-0.5">
+              <div className="flex items-center gap-0.5">
               <button
                 onClick={() => { setSearchOpen((s) => !s); setSearchQ(""); }}
-                className="w-9 h-9 flex items-center justify-center text-black/50 hover:text-black rounded-full transition-all bg-black/[0.04] hover:bg-black/[0.08] border border-black/[0.06] hover:border-black/[0.10] backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]"
+                className="w-9 h-9 flex items-center justify-center text-black/50 hover:text-black rounded-full transition-all bg-black/[0.04] hover:bg-black/[0.08] border border-black/[0.06] backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]"
                 aria-label="Buscar"
               >
                 <Search size={17} strokeWidth={2} />
               </button>
 
-              {/* Cart */}
+              <button
+                aria-label="Iniciar sesión"
+                className="w-9 h-9 flex items-center justify-center text-black/50 hover:text-black rounded-full transition-all bg-black/[0.04] hover:bg-black/[0.08] border border-black/[0.06] backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]"
+              >
+                <LogIn size={17} strokeWidth={2} />
+              </button>
+
               <button
                 onClick={openCart}
                 aria-label="Carrito"
                 className={`relative flex items-center justify-center gap-1.5 transition-all duration-200
-                  bg-black/[0.04] hover:bg-black/[0.08] border border-black/[0.06] hover:border-black/[0.10]
+                  bg-black/[0.04] hover:bg-black/[0.08] border border-black/[0.06]
                   backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]
                   text-black/50 hover:text-black
                   ${itemCount > 0
@@ -168,14 +206,14 @@ export default function Navbar() {
                 )}
               </button>
 
-              {/* Mobile hamburger */}
               <button
                 onClick={() => setMobileOpen((s) => !s)}
-                className="lg:hidden w-9 h-9 flex items-center justify-center text-black/50 hover:text-black rounded-full transition-all ml-0.5 bg-black/[0.04] hover:bg-black/[0.08] border border-black/[0.06] hover:border-black/[0.10] backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]"
+                className="w-9 h-9 flex items-center justify-center text-black/50 hover:text-black rounded-full transition-all ml-0.5 bg-black/[0.04] hover:bg-black/[0.08] border border-black/[0.06] backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]"
                 aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
               >
                 {mobileOpen ? <X size={17} strokeWidth={2} /> : <Menu size={17} strokeWidth={2} />}
               </button>
+              </div>
             </div>
           </div>
         </div>
