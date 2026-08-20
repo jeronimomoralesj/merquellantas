@@ -114,6 +114,19 @@ h1, h2, h3 {
   transition: opacity 0.65s cubic-bezier(0.16,1,0.3,1), transform 0.65s cubic-bezier(0.16,1,0.3,1);
 }
 
+/* Merquito greeting bob */
+@keyframes merqBob {
+  0%, 100% { transform: translateY(0px); }
+  45%       { transform: translateY(-7px); }
+}
+@keyframes merqWave {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25%       { transform: rotate(18deg) scale(1.1); }
+  75%       { transform: rotate(-8deg) scale(1.05); }
+}
+.animate-merq-bob  { animation: merqBob 1.8s ease-in-out infinite; }
+.animate-merq-wave { animation: merqWave 0.55s ease-in-out 3; }
+
 /* Slow tire spin */
 @keyframes tireSpin {
   to { transform: rotate(360deg); }

@@ -2,13 +2,15 @@ import Navbar        from "./components/Navbar";
 import HeroSection  from "./components/HeroSection";
 import WhatsAppButton from "./components/WhatsAppButton";
 import BrandsCarousel from "./components/BrandsCarousel";
+import MerquitoDeals from "./components/MerquitoDeals";
 import FlashDeals   from "./components/FlashDeals";
 import BentoGrid    from "./components/BentoGrid";
 import CityStats    from "./components/CityStats";
 import StoreFinder  from "./components/StoreFinder";
 import Testimonials from "./components/Testimonials";
 import BlogSection  from "./components/BlogSection";
-import Footer       from "./components/Footer";
+import Footer           from "./components/Footer";
+import MerquitoGreeting from "./components/MerquitoGreeting";
 
 export default function Home() {
   return (
@@ -16,13 +18,14 @@ export default function Home() {
       <Navbar />
       <HeroSection />
       <BentoGrid />
+      <MerquitoDeals />
       <FlashDeals />
       <CityStats />
       <StoreFinder />
-      <BlogSection />
       <Testimonials />
       <Footer />
       <WhatsAppButton />
+      <MerquitoGreeting />
     </main>
   );
 }

@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { label: "Baterías",    href: "/products?category=baterias" },
   { label: "Rines",       href: "/products?category=rines" },
   { label: "Ofertas",     href: "#offers" },
+  { label: "Blog",     href: "/blog" },
 ];
 
 export default function Navbar() {
@@ -299,6 +300,15 @@ export default function Navbar() {
                   >
                     Ver todos los resultados para &ldquo;{searchQ}&rdquo;
                   </button>
+
+                  {/* Merquito pointing up at results */}
+                  <div className="flex items-end justify-center pl-3 pr-1 pt-2 mt-1 border-t border-black/[0.05]">
+                    <img
+                      src="/merquito-pointing.png"
+                      alt="Merquito"
+                      className="h-34 w-auto object-contain flex-shrink-0"
+                    />
+                  </div>
                 </div>
               )}
 

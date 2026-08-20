@@ -84,7 +84,7 @@ function ProductCard({ product }: { product: Product }) {
   }
 
   return (
-    <div className="flex-none w-[268px] sm:w-[284px] rounded-3xl overflow-hidden group hover:-translate-y-1.5 transition-all duration-400 flex flex-col min-h-[430px] bg-white/55 backdrop-blur-2xl border border-white/72 shadow-[inset_0_2px_0_rgba(255,255,255,0.95),inset_0_0_0_1px_rgba(255,255,255,0.4),0_4px_20px_rgba(0,0,0,0.06)] hover:bg-white/70 hover:shadow-[inset_0_2px_0_rgba(255,255,255,1),0_20px_56px_rgba(0,0,0,0.11)]">
+    <div className="flex-none w-[268px] sm:w-[284px] rounded-3xl overflow-hidden group hover:-translate-y-1.5 transition-all duration-400 flex flex-col min-h-[430px] bg-white/55 backdrop-blur-2xl border border-white/72 shadow-[inset_0_2px_0_rgba(255,255,255,0.95),inset_0_0_0_1px_rgba(255,255,255,0.4),0_4px_20px_rgba(0,0,0,0.06)] hover:bg-white/70 hover:shadow-[inset_0_2px_0_rgba(255,255,255,1),0_20px_56px_rgba(255,153,0,0.28)]">
 
       {/* Image */}
       <Link href={`/products/${product.id}`} className="block flex-shrink-0">
@@ -123,7 +123,7 @@ function ProductCard({ product }: { product: Product }) {
 
           {/* Discount pill */}
           {product.discountPct && (
-            <div className="absolute top-3.5 right-3.5 px-2 py-1 rounded-full bg-white text-rose-500 text-[11px] font-black shadow-sm">
+            <div className="absolute top-3.5 right-3.5 px-2 py-1 rounded-full bg-red-600 text-white text-[11px] font-black shadow-sm">
               -{product.discountPct}%
             </div>
           )}
@@ -168,13 +168,13 @@ function ProductCard({ product }: { product: Product }) {
               ${product.price.toLocaleString("es-CO")}
             </div>
             {product.originalPrice && (
-              <div className="text-gray-300 text-xs line-through mt-1">
+              <div className="text-gray-500 text-[13px] line-through mt-1 font-medium">
                 ${product.originalPrice.toLocaleString("es-CO")}
               </div>
             )}
           </div>
           {product.discountPct && (
-            <span className="text-rose-500 text-sm font-bold mb-0.5">
+            <span className="text-red-600 text-sm font-bold mb-0.5">
               -{product.discountPct}%
             </span>
           )}
@@ -195,6 +195,22 @@ function ProductCard({ product }: { product: Product }) {
             <><ShoppingCart size={14} /> Agregar al carrito</>
           )}
         </button>
+
+        {/* Payment logos */}
+        <div className="flex items-center justify-center gap-3 mt-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://mythslegendscollection.com/wp-content/uploads/2020/04/visa-mastercard-american-express-png-6.png"
+            alt="Visa Mastercard American Express"
+            className="h-5 object-contain opacity-60"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://colombiafintech.co/wp-content/uploads/2025/11/Addi-logo-01-1024x717.jpg"
+            alt="Addi"
+            className="h-5 object-contain opacity-60 rounded"
+          />
+        </div>
       </div>
     </div>
   );
@@ -237,9 +253,6 @@ export default function FlashDeals() {
             >
               Productos<br />destacados.
             </h2>
-            <p className="text-gray-400 text-[13px] mt-3 font-medium">
-              Envío gratuito en compras mayores a $200.000
-            </p>
           </div>
 
           <div className="flex items-center gap-3 self-end sm:self-auto">

@@ -159,15 +159,15 @@ function ProductCard({ product }: { product: Product }) {
         <div className="flex flex-col sm:flex-row">
 
           {/* Image */}
-          <div className="sm:w-52 lg:w-60 flex-shrink-0 flex items-center justify-center
-            relative overflow-hidden h-52 sm:h-auto min-h-[200px]"
+          <div className="sm:w-64 lg:w-76 flex-shrink-0 flex items-center justify-center
+            relative overflow-hidden h-56 sm:h-auto min-h-[220px]"
             style={!product.images?.[0]
               ? { background: `linear-gradient(145deg, ${product.bgFrom} 0%, ${product.bgTo} 100%)` }
               : { background: "#f5f5f7" }}>
             {product.images?.[0] ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={product.images[0]} alt={product.name}
-                className="w-full h-full object-contain p-6 transition-transform duration-500 group-hover:scale-[1.04]" />
+                className="w-full h-full object-contain p-3 transition-transform duration-500 group-hover:scale-[1.04]" />
             ) : (
               <div className="flex flex-col items-center justify-center gap-2 p-6
                 transition-transform duration-500 group-hover:scale-[1.04]">
@@ -627,11 +627,25 @@ function ProductsContent() {
         {/* ── Hero banner ─────────────────────────────────────────── */}
         <div
           className="relative overflow-hidden"
-          style={{ background: "linear-gradient(135deg, #1a0500 0%, #7a2e00 100%)" }}
+          style={{ background: "#1a0500" }}
         >
-          {/* Subtle tread-line texture */}
-          <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
-            style={{ backgroundImage: "repeating-linear-gradient(0deg, #000 0px, #000 1px, transparent 1px, transparent 24px)" }} />
+          {/* Video background */}
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ opacity: 0.55 }}
+          >
+            <source src="/products-hero.mp4" type="video/mp4" />
+          </video>
+
+          {/* Dark gradient overlay for text legibility */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "linear-gradient(160deg, rgba(26,5,0,0.72) 0%, rgba(80,25,0,0.45) 50%, rgba(26,5,0,0.68) 100%)" }}
+          />
 
           {/* Merquito — absolute right */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -768,7 +782,7 @@ function ProductsContent() {
                           ? brands.filter((x) => x !== brand.name)
                           : [...brands, brand.name]
                       )}
-                      className={`flex-none flex flex-col items-center gap-1.5 px-4 py-2 rounded-2xl border
+                      className={`flex-none flex flex-col items-center gap-3.5 px-6 py-4 rounded-2xl border
                         transition-all duration-200 ${
                         active
                           ? "bg-[#ff9900]/10 border-[#ff9900]/50 shadow-[0_0_0_2px_rgba(255,153,0,0.2)]"
@@ -779,7 +793,7 @@ function ProductsContent() {
                       <img
                         src={brand.url}
                         alt={brand.name}
-                        className="h-6 w-20 object-contain"
+                        className="h-14 w-36 object-contain"
                         loading="lazy"
                         onError={(e) => {
                           const el = e.currentTarget as HTMLImageElement;
@@ -790,11 +804,6 @@ function ProductsContent() {
                           el.parentElement?.appendChild(span);
                         }}
                       />
-                      <span className={`text-[10px] font-semibold leading-none transition-colors ${
-                        active ? "text-[#c47800]" : "text-gray-400"
-                      }`}>
-                        {brand.name}
-                      </span>
                     </button>
                   );
                 })}
