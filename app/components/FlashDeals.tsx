@@ -84,7 +84,7 @@ function ProductCard({ product }: { product: Product }) {
   }
 
   return (
-    <div className="flex-none w-[268px] sm:w-[284px] rounded-3xl overflow-hidden group hover:-translate-y-1.5 transition-all duration-400 flex flex-col min-h-[430px] bg-white/55 backdrop-blur-2xl border border-white/72 shadow-[inset_0_2px_0_rgba(255,255,255,0.95),inset_0_0_0_1px_rgba(255,255,255,0.4),0_4px_20px_rgba(0,0,0,0.06)] hover:bg-white/70 hover:shadow-[inset_0_2px_0_rgba(255,255,255,1),0_20px_56px_rgba(255,153,0,0.28)]">
+    <div className="flex-none w-[268px] sm:w-[284px] rounded-3xl overflow-hidden group hover:-translate-y-1.5 transition-transform duration-400 flex flex-col min-h-[430px] bg-white border border-white/80 shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_56px_rgba(255,153,0,0.28)]">
 
       {/* Image */}
       <Link href={`/products/${product.id}`} className="block flex-shrink-0">

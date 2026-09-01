@@ -10,8 +10,6 @@ import StoreFinder  from "./components/StoreFinder";
 import Testimonials from "./components/Testimonials";
 import BlogSection  from "./components/BlogSection";
 import Footer           from "./components/Footer";
-import MerquitoGreeting from "./components/MerquitoGreeting";
-
 export default function Home() {
   return (
     <main>
@@ -25,7 +23,6 @@ export default function Home() {
       <Testimonials />
       <Footer />
       <WhatsAppButton />
-      <MerquitoGreeting />
     </main>
   );
 }

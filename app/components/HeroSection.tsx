@@ -158,7 +158,7 @@ export default function HeroSection() {
   const [loaded, setLoaded]   = useState(false);
 
   /* Shared vehicle type (drives both tabs) */
-  const [vehicleType, setVehicleType] = useState<SizeType | "">("");
+  const [vehicleType, setVehicleType] = useState<SizeType | "">("automovil");
 
   /* Vehicle tab */
   const [year, setYear]       = useState("");
@@ -211,7 +211,7 @@ export default function HeroSection() {
       style={{ minHeight: "100svh" }}
     >
       {/* ── Background video ────────────────────────────────────────── */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 pointer-events-none">
         <video
           className="w-full h-full object-cover"
           autoPlay muted loop playsInline preload="auto"

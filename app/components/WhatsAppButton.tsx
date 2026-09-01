@@ -24,7 +24,7 @@ export default function WhatsAppButton() {
       {/* Button */}
       <div className="relative">
         {/* Pulse ring */}
-        <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-40" />
+        <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-40 pointer-events-none" />
         <a
           href={`https://wa.me/${WA_NUMBER}?text=${WA_MESSAGE}`}
           target="_blank"
