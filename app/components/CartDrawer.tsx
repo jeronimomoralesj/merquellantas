@@ -47,8 +47,8 @@ export default function CartDrawer() {
         <div
           className={`relative w-full max-w-5xl flex flex-col lg:flex-row rounded-3xl overflow-hidden
             shadow-[0_32px_80px_rgba(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.06)]
-            pointer-events-auto transition-all duration-300 origin-center
-            ${isOpen ? "scale-100 opacity-100" : "scale-[0.96] opacity-0"}`}
+            transition-all duration-300 origin-center
+            ${isOpen ? "scale-100 opacity-100 pointer-events-auto" : "scale-[0.96] opacity-0 pointer-events-none"}`}
           style={{ maxHeight: "min(88vh, 680px)" }}
         >
 
