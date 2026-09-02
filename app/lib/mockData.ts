@@ -13,7 +13,7 @@ export const BRANDS = [
   { name: "Total",     url: "https://guiadelubricantes.total-argentina.com.ar/v2/imagenes/logo.png" },
   { name: "Mobil",      url: "https://www.terpel.com/var/site/storage/images/5/1/4/6/96415-1-esl-CO/f6b50119131d-OG.png" },
   { name: "Alcoa",  url: "https://allvectorlogo.com/img/2017/09/alcoa-logo.png" },
-  { name: "Willard",  url: "https://app.bateriaswillard.com/css/resources/client/images/willard2012.png" },
+  { name: "Willard",  url: "https://www.autoamericas.show/media/com_mtree/images/listings/m/5eac9965-adf8-d029-29fc-6980f2cee0d3_imagen_c.png?t=1771614019" },
   { name: "Nexen",       url: "https://www.tyrestar.cz/files/manufacturer_images/nexen-logo-1920x1080.png" },
 ];
 

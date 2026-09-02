@@ -282,7 +282,7 @@ export default function CategoryMatrix() {
                         setCenterIndex(index);
                       }
                     }}
-                    className="group/card relative block h-100 bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_40px_rgba(255,153,0,0.18)] transition-all duration-300 hover:scale-[1.06] hover:-translate-y-1"
+                    className="group/card relative block h-100 bg-white border border-gray-100 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_40px_rgba(255,153,0,0.18)] transition-all duration-300 hover:scale-[1.06]"
                   >
                     {/* Corner accents (appear on hover) */}
                     <span className="pointer-events-none absolute -top-[2px] -left-[2px] w-6 h-6 border-t-[3px] border-l-[3px] border-[#ff9900] rounded-tl-2xl opacity-0 scale-75 group-hover/card:opacity-100 group-hover/card:scale-100 transition-all duration-300" />

@@ -101,7 +101,7 @@ export default function Navbar() {
               <a href="/" className="inline-flex items-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="https://www.merquellantas.com/assets/images/logo/Logo-Merquellantas.png"
+                  src="/logo.jpeg"
                   alt="Merquellantas"
                   className="h-8 w-auto object-contain"
                   onError={(e) => {

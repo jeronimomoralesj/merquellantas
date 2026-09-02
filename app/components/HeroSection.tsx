@@ -79,7 +79,7 @@ const VEHICLE_TYPES: {
   Icon: (props: { size?: number }) => React.ReactElement;
 }[] = [
   { key: "automovil", label: "Automóvil", Icon: ({ size }) => <Car size={size ?? 22} /> },
-  { key: "camioneta", label: "4×4 / SUV",  Icon: ({ size }) => <PickupIcon size={size} /> },
+  { key: "camioneta", label: "Camioneta",  Icon: ({ size }) => <PickupIcon size={size} /> },
   { key: "camion",    label: "Camión",     Icon: ({ size }) => <HeavyTruckIcon size={size} /> },
 ];
 
@@ -276,8 +276,8 @@ export default function HeroSection() {
                         : "bg-white/5 border-white/10 text-white/40 hover:border-white/25 hover:text-white/65"
                     }`}
                   >
-                    <Icon size={20} />
-                    <span className="text-[9px] font-bold leading-tight text-center px-0.5">
+                    <Icon size={24} />
+                    <span className="text-[13px] font-bold leading-tight text-center px-0.5">
                       {label}
                     </span>
                   </button>
@@ -402,7 +402,7 @@ export default function HeroSection() {
       </div>
 
       {/* ── Brand logo strip ────────────────────────────────────────── */}
-      <div className="absolute bottom-0 left-0 right-0 z-20 h-14 flex items-center border-t border-gray-100 bg-white overflow-hidden">
+      <div className="absolute bottom-0 left-0 right-0 z-20 h-18 flex items-center border-t border-gray-100 bg-white overflow-hidden">
         <div className="flex-1 overflow-hidden min-w-0">
           <div
             className="flex items-center"
@@ -414,7 +414,7 @@ export default function HeroSection() {
                 <img
                   src={brand.url}
                   alt={brand.name}
-                  className="max-h-7 max-w-[88px] w-auto object-contain opacity-60 hover:opacity-100 transition-opacity duration-300"
+                  className="max-h-7 max-w-[288px] w-auto object-contain opacity-60 hover:opacity-100 transition-opacity duration-300"
                   loading="lazy"
                   onError={(e) => {
                     const el = e.currentTarget as HTMLImageElement;

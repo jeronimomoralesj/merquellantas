@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, Suspense } from "react";
+import { useState, useMemo, useRef, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -207,15 +207,6 @@ function ProductCard({ product }: { product: Product }) {
               <span className="text-sm font-semibold text-[#1d1d1f]">{product.rating}</span>
               <span className="text-sm text-[#6e6e73]">({product.reviewCount.toLocaleString()} reseñas)</span>
             </div>
-            <div className="flex flex-wrap gap-1.5 mb-3.5">
-              {product.specs.map((s) => (
-                <span key={s} className="text-[11px] text-[#6e6e73] bg-[#f5f5f7] px-2.5 py-1
-                  rounded-lg font-medium border border-gray-100">{s}</span>
-              ))}
-            </div>
-            <p className="text-sm text-[#6e6e73] leading-relaxed line-clamp-2 flex-1">
-              {product.shortDesc}
-            </p>
 
             {/* Partner badges */}
             <div className="flex flex-wrap items-center gap-2 mt-3">
@@ -608,6 +599,11 @@ function ProductsContent() {
     ? CATEGORY_LABELS[category as ProductCategory]
     : "Todos los productos";
 
+  useEffect(() => {
+    document.title = `${pageTitle} — Merquellantas`;
+    return () => { document.title = "Merquellantas — Llantas, Lubricantes, Baterías y Rines en Colombia"; };
+  }, [pageTitle]);
+
   const filterProps = {
     category, setCategory: setFC,
     brands, setBrands: setFB,
@@ -793,7 +789,7 @@ function ProductsContent() {
                       <img
                         src={brand.url}
                         alt={brand.name}
-                        className="h-14 w-36 object-contain"
+                        className="h-14 w-36 object-contain mix-blend-multiply"
                         loading="lazy"
                         onError={(e) => {
                           const el = e.currentTarget as HTMLImageElement;
